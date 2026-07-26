@@ -136,7 +136,23 @@ input[type="checkbox"] { width: auto; }
     border: 1px solid var(--line);
     padding: 34px;
 }
-.receipt-header { display: flex; justify-content: space-between; gap: 18px; border-bottom: 2px solid var(--ink); padding-bottom: 18px; }
+.receipt-header { display: flex; justify-content: space-between; gap: 18px; border-bottom: 2px solid var(--ink); padding-bottom: 18px; flex-wrap: wrap; }
+.receipt-school { display: flex; align-items: center; gap: 14px; }
+.receipt-logo { max-height: 64px; max-width: 140px; object-fit: contain; }
+.receipt-meta { text-align: right; }
+
+.receipt-identity { margin: 16px 0; }
+.receipt-identity th { text-align: left; white-space: nowrap; padding-right: 10px; }
+
+.receipt-words { margin: 14px 0; font-style: italic; }
+
+.receipt-footer { margin-top: 18px; border-top: 1px solid rgba(0, 0, 0, .12); padding-top: 14px; }
+.receipt-verification { display: flex; align-items: center; gap: 14px; }
+.receipt-qr { width: 120px; height: 120px; }
+
+@media (max-width: 560px) {
+    .receipt-meta { text-align: left; }
+}
 .front-shell { min-height: 100vh; background: linear-gradient(180deg, #f7fbff, #eef6f3); }
 .front-content { max-width: 1120px; margin: 0 auto; padding: 24px; }
 

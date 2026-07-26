@@ -7,11 +7,23 @@
     <section class="panel">
         <h1>Verification de recu</h1>
         {% if receipt %}
-            <p><span class="badge ok">Recu valide</span></p>
-            <p>Numero: {{ receipt.receiptNumber }}</p>
-            <p>Date: {{ receipt.generatedAt|date('d/m/Y H:i') }}</p>
-            <p>Eleve: {{ receipt.payment.student.registrationNumber }} - {{ receipt.payment.student.fullName }}</p>
-            <p>Montant: {{ receipt.payment.totalAmount|number_format(0, ',', ' ') }} Ar</p>
+            <p><span class="badge ok">Recu authentique</span></p>
+            <table class="receipt-identity">
+                <tbody>
+                    <tr><th>Numero</th><td>{{ receipt.receiptNumber }}</td></tr>
+                    <tr><th>Emis le</th><td>{{ receipt.generatedAt|date('d/m/Y H:i') }}</td></tr>
+                    <tr><th>Montant</th><td>{{ receipt.payment.totalAmount|number_format(0, ',', ' ') }} Ar</td></tr>
+                    <tr><th>Eleve</th><td>{{ maskedStudent }}</td></tr>
+                    {% if receipt.payment.status == 'annule' %}
+                        <tr><th>Statut</th><td><span class="badge danger">Paiement annule</span></td></tr>
+                    {% endif %}
+                </tbody>
+            </table>
+            {# Cette page est accessible sans authentification : conformement a
+               la section 16, elle se limite aux informations permettant de
+               confirmer l'authenticite du recu. Le nom de l'eleve est abrege et
+               le detail des frais n'est pas expose. #}
+            <p class="muted">Seules les informations necessaires a la verification sont affichees. Le detail des frais est consultable depuis l espace parent.</p>
         {% else %}
             <p><span class="badge danger">Code inconnu</span></p>
             <p>Aucun recu ne correspond au code {{ code }}.</p>

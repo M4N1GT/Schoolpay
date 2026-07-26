@@ -22,6 +22,14 @@ class SchoolSettingType extends AbstractType
             ->add('address', TextareaType::class, ['label' => 'Adresse', 'required' => false])
             ->add('phone', TextType::class, ['label' => 'Telephone', 'required' => false])
             ->add('email', EmailType::class, ['label' => 'Email', 'required' => false])
+            // Chemin d'un fichier deja depose dans public/, par exemple
+            // "img/logo.png". Le televersement avec controle de type et de
+            // taille reste a faire (section 25).
+            ->add('logo', TextType::class, [
+                'label' => 'Logo (chemin dans public/)',
+                'required' => false,
+                'help' => 'Exemple : img/logo.png',
+            ])
             ->add('currency', TextType::class, ['label' => 'Devise'])
             ->add('currencySymbol', TextType::class, ['label' => 'Symbole'])
             ->add('receiptFooter', TextareaType::class, ['label' => 'Pied de recu', 'required' => false])

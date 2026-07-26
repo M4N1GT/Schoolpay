@@ -3,35 +3,92 @@
 {% block title %}Recu {{ receipt.receiptNumber }}{% endblock %}
 
 {% block body %}
+{% set payment = receipt.payment %}
+{% set student = payment.student %}
 <div class="receipt">
     <div class="receipt-header">
-        <div>
-            <h1>{{ settings.schoolName }}</h1>
-            <p>{{ settings.address }}<br>{{ settings.phone }} {{ settings.email }}</p>
+        <div class="receipt-school">
+            {% if settings.logo %}
+                <img class="receipt-logo" src="{{ asset(settings.logo) }}" alt="{{ settings.schoolName }}">
+            {% endif %}
+            <div>
+                <h1>{{ settings.schoolName }}</h1>
+                <p>
+                    {{ settings.address }}<br>
+                    {{ settings.phone }}{% if settings.phone and settings.email %} | {% endif %}{{ settings.email }}
+                </p>
+            </div>
         </div>
-        <div>
+        <div class="receipt-meta">
             <strong>Recu {{ receipt.receiptNumber }}</strong><br>
             {{ receipt.generatedAt|date('d/m/Y H:i') }}<br>
-            Code: {{ receipt.verificationCode }}
+            Paiement {{ payment.paymentNumber }}
+            {% if payment.status == 'annule' %}
+                <p><span class="badge danger">Paiement annule</span></p>
+            {% endif %}
         </div>
     </div>
-    <h2>{{ receipt.payment.student.fullName }}</h2>
-    <p>Matricule: {{ receipt.payment.student.registrationNumber }} | Classe: {{ receipt.payment.student.schoolClass }} | Annee: {{ receipt.payment.schoolYear }}</p>
-    <table>
-        <thead><tr><th>Frais</th><th>Montant paye</th></tr></thead>
+
+    <table class="receipt-identity">
         <tbody>
-        {% for detail in receipt.payment.details %}
-            <tr><td>{{ detail.feeAssignment.feeType.name }}</td><td>{{ detail.amount|number_format(0, ',', ' ') }} {{ settings.currencySymbol }}</td></tr>
-        {% endfor %}
+            <tr><th>Eleve</th><td>{{ student.fullName }}</td><th>Matricule</th><td>{{ student.registrationNumber }}</td></tr>
+            <tr><th>Classe</th><td>{{ student.schoolClass }}</td><th>Annee scolaire</th><td>{{ payment.schoolYear }}</td></tr>
         </tbody>
     </table>
-    <h2>Total: {{ receipt.payment.totalAmount|number_format(0, ',', ' ') }} {{ settings.currencySymbol }}</h2>
-    <p>Mode: {{ receipt.payment.paymentMethod }} | Reference: {{ receipt.payment.externalReference ?: 'N/A' }} | Comptable: {{ receipt.payment.receivedBy ? receipt.payment.receivedBy.fullName : 'N/A' }}</p>
-    <p>Reste a payer: {{ situation.remainingTotal|number_format(0, ',', ' ') }} {{ settings.currencySymbol }}</p>
-    <p class="muted">{{ settings.receiptFooter }}</p>
+
+    <table>
+        <thead><tr><th>Frais</th><th>Echeance</th><th>Montant paye</th></tr></thead>
+        <tbody>
+        {% for detail in payment.details %}
+            <tr>
+                <td>{{ detail.feeAssignment.feeType.name }}</td>
+                <td>{{ detail.feeAssignment.dueDate|date('d/m/Y') }}</td>
+                <td>{{ detail.amount|number_format(0, ',', ' ') }} {{ settings.currencySymbol }}</td>
+            </tr>
+        {% endfor %}
+        </tbody>
+        <tfoot>
+            <tr><th colspan="2">Total</th><th>{{ payment.totalAmount|number_format(0, ',', ' ') }} {{ settings.currencySymbol }}</th></tr>
+        </tfoot>
+    </table>
+
+    {% if amountInWords %}
+        <p class="receipt-words">Arrete le present recu a la somme de <strong>{{ amountInWords }}</strong>.</p>
+    {% endif %}
+
+    <table class="receipt-identity">
+        <tbody>
+            <tr>
+                <th>Mode de paiement</th><td>{{ payment.paymentMethod }}</td>
+                <th>Reference</th><td>{{ payment.externalReference ?: 'N/A' }}</td>
+            </tr>
+            <tr>
+                <th>Encaisse par</th><td>{{ payment.receivedBy ? payment.receivedBy.fullName : 'N/A' }}</td>
+                <th>Reste a payer</th><td>{{ situation.remainingTotal|number_format(0, ',', ' ') }} {{ settings.currencySymbol }}</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <div class="receipt-footer">
+        <div class="receipt-verification">
+            {% if qrCode %}
+                <img class="receipt-qr" src="{{ qrCode }}" alt="QR code de verification">
+            {% endif %}
+            <div>
+                <strong>Verification</strong><br>
+                Code : {{ receipt.verificationCode }}<br>
+                <span class="muted">Scannez le code ou saisissez-le sur la page de verification.</span>
+            </div>
+        </div>
+        <p class="muted">{{ settings.receiptFooter }}</p>
+    </div>
+
     <div class="actions no-print">
         <button onclick="window.print()">Imprimer</button>
         <a class="button ghost" href="{{ path('receipt_verify', {code: receipt.verificationCode}) }}">Verifier</a>
+        {% if backPath is defined %}
+            <a class="button ghost" href="{{ backPath }}">Retour</a>
+        {% endif %}
     </div>
 </div>
 {% endblock %}

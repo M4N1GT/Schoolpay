@@ -26,10 +26,18 @@
 <section class="table-panel" style="margin-top: 18px;">
     <h2>Recus</h2>
     <table>
-        <thead><tr><th>Numero</th><th>Date</th><th>Montant</th><th>Verification</th></tr></thead>
+        <thead><tr><th>Numero</th><th>Date</th><th>Montant</th><th>Actions</th></tr></thead>
         <tbody>
         {% for receipt in receipts %}
-            <tr><td>{{ receipt.receiptNumber }}</td><td>{{ receipt.generatedAt|date('d/m/Y') }}</td><td>{{ receipt.payment.totalAmount|number_format(0, ',', ' ') }} Ar</td><td><a class="button ghost" href="{{ path('receipt_verify', {code: receipt.verificationCode}) }}">Verifier</a></td></tr>
+            <tr>
+                <td>{{ receipt.receiptNumber }}</td>
+                <td>{{ receipt.generatedAt|date('d/m/Y') }}</td>
+                <td>{{ receipt.payment.totalAmount|number_format(0, ',', ' ') }} Ar</td>
+                <td class="actions">
+                    <a class="button" href="{{ path('parent_receipt_show', {id: receipt.id}) }}">Ouvrir</a>
+                    <a class="button ghost" href="{{ path('receipt_verify', {code: receipt.verificationCode}) }}">Verifier</a>
+                </td>
+            </tr>
         {% else %}
             <tr><td colspan="4">Aucun recu.</td></tr>
         {% endfor %}

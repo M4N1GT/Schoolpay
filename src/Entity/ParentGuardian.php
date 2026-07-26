@@ -85,7 +85,19 @@ class ParentGuardian
     public function getRelationshipType(): string { return $this->relationshipType; }
     public function setRelationshipType(string $relationshipType): self { $this->relationshipType = $relationshipType; return $this; }
     public function getUser(): ?User { return $this->user; }
-    public function setUser(?User $user): self { $this->user = $user; return $this; }
+    /**
+     * Synchronise le cote inverse : User::parentProfile est le cote non
+     * proprietaire de la relation, Doctrine ne le renseigne qu'au chargement.
+     * Sans cette mise a jour, un compte parent rattache pendant la requete
+     * courante voit son profil rester nul, et l'espace parent lui est refuse.
+     */
+    public function setUser(?User $user): self
+    {
+        $this->user = $user;
+        $user?->setParentProfile($this);
+
+        return $this;
+    }
     public function getStudents(): Collection { return $this->students; }
     public function getCreatedAt(): \DateTimeImmutable { return $this->createdAt; }
     public function getUpdatedAt(): \DateTimeImmutable { return $this->updatedAt; }
