@@ -7,6 +7,9 @@
 <div class="actions">
     {% if is_granted('MANAGE', resource) %}
         <a class="button" href="{{ path('backoffice_crud_new', {resource: resource}) }}">Ajouter</a>
+        {% if resource == 'students' %}
+            <a class="button secondary" href="{{ path('backoffice_student_import') }}">Import CSV</a>
+        {% endif %}
     {% endif %}
     <a class="button ghost" href="{{ path('backoffice_crud_index', {resource: resource, export: 'csv'}) }}">Export CSV</a>
 </div>

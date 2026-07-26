@@ -1,0 +1,71 @@
+{% extends 'backoffice/layout.html.twig' %}
+
+{% block title %}Import des eleves | SchoolPay{% endblock %}
+{% block page_title %}Import des eleves{% endblock %}
+
+{% block content %}
+<section class="panel">
+    <h2>Format attendu</h2>
+    <p class="muted">
+        Fichier CSV encode en UTF-8, colonnes separees par un point-virgule.
+        La premiere ligne doit contenir les en-tetes ci-dessous, dans l ordre
+        de votre choix.
+    </p>
+    <p><code>{{ columns|join(';') }}</code></p>
+    <ul class="muted">
+        <li><strong>matricule</strong> : obligatoire et unique. Une ligne dont le matricule existe deja est rejetee.</li>
+        <li><strong>prenom</strong>, <strong>nom</strong> : obligatoires.</li>
+        <li><strong>classe</strong> : obligatoire, doit correspondre au nom exact d une classe existante.</li>
+        <li><strong>sexe</strong> : facultatif.</li>
+        <li><strong>date_naissance</strong> : facultative, au format jj/mm/aaaa.</li>
+    </ul>
+    <p class="muted">Les eleves sont rattaches a l annee scolaire active.</p>
+    <div class="actions">
+        <a class="button ghost" href="{{ path('backoffice_student_import_template') }}">Telecharger le modele</a>
+    </div>
+</section>
+
+<form method="post" enctype="multipart/form-data" class="panel grid-form" style="margin-top: 18px;">
+    <input type="hidden" name="_token" value="{{ csrf_token('import_students') }}">
+    <div>
+        <label for="file">Fichier CSV</label>
+        <input id="file" type="file" name="file" accept=".csv,text/csv" required>
+    </div>
+    <button>Importer</button>
+</form>
+
+{% if result %}
+    <section class="panel" style="margin-top: 18px;">
+        <h2>Resultat de l import</h2>
+        <div class="stats-row">
+            <div class="stat-card"><span class="stat-value">{{ result.rows }}</span><span class="stat-label">Lignes lues</span></div>
+            <div class="stat-card"><span class="stat-value">{{ result.imported }}</span><span class="stat-label">Importees</span></div>
+            <div class="stat-card"><span class="stat-value">{{ result.rejected }}</span><span class="stat-label">Rejetees</span></div>
+        </div>
+
+        {% if result.errors is empty %}
+            <p class="flash flash-success" style="margin-top: 16px;">Import termine sans erreur.</p>
+        {% else %}
+            <div class="table-wrap" style="margin-top: 16px;">
+                <table>
+                    <thead><tr><th>Ligne</th><th>Motif du rejet</th></tr></thead>
+                    <tbody>
+                    {% for error in result.errors %}
+                        <tr>
+                            <td>{{ error.line ?? 'Fichier' }}</td>
+                            <td>{{ error.message }}</td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% endif %}
+
+        {% if result.imported > 0 %}
+            <div class="actions" style="margin-top: 16px;">
+                <a class="button" href="{{ path('backoffice_crud_index', {resource: 'students'}) }}">Voir les eleves</a>
+            </div>
+        {% endif %}
+    </section>
+{% endif %}
+{% endblock %}
