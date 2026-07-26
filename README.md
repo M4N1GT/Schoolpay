@@ -57,6 +57,20 @@ Mot de passe commun : `password123`
 - Espace parent : `/parent`
 - Verification recu : `/receipt/verify/{code}`
 
+## Taches planifiees
+
+Les notifications d'echeance sont produites par une commande a executer une
+fois par jour :
+
+```bash
+php bin/console app:notify-deadlines           # echeances a 7 jours et retards
+php bin/console app:notify-deadlines --days=15 # fenetre elargie
+php bin/console app:notify-deadlines --dry-run # simulation, aucun envoi
+```
+
+Chaque avis porte une reference unique : relancer la commande plusieurs fois
+par jour ne produit pas de doublon.
+
 ## Validation
 
 Commandes utiles :

@@ -51,7 +51,7 @@ class ParentDashboardController extends AbstractController
             'totals' => $totals,
             'upcoming' => array_slice($upcoming, 0, 5),
             'notifications' => $user instanceof User ? $notifications->findBy(['user' => $user], ['createdAt' => 'DESC'], 5) : [],
-            'unreadCount' => $user instanceof User ? $notifications->count(['user' => $user, 'isRead' => false]) : 0,
+            'unreadCount' => $user instanceof User ? $notifications->countUnread($user) : 0,
         ]);
     }
 

@@ -6,8 +6,17 @@ use App\Repository\NotificationRepository;
 use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Entity(repositoryClass: NotificationRepository::class)]
+#[ORM\Index(columns: ['reference'], name: 'idx_notification_reference')]
 class Notification
 {
+    public const TYPE_NEW_PAYMENT = 'nouveau_paiement';
+    public const TYPE_PAYMENT_CANCELLED = 'paiement_annule';
+    public const TYPE_RECEIPT_AVAILABLE = 'recu_disponible';
+    public const TYPE_DEADLINE_NEAR = 'echeance_proche';
+    public const TYPE_DEADLINE_PASSED = 'echeance_depassee';
+    public const TYPE_DISCOUNT_GRANTED = 'reduction_accordee';
+    public const TYPE_PARENT_ACCOUNT = 'compte_parent';
+
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
@@ -28,6 +37,14 @@ class Notification
 
     #[ORM\Column]
     private bool $isRead = false;
+
+    /**
+     * Cle metier de l'evenement notifie, par exemple "fee:12:echeance_proche".
+     * Elle permet de ne pas renvoyer deux fois la meme alerte : sans elle, la
+     * commande d'echeances repeterait ses avis a chaque execution.
+     */
+    #[ORM\Column(length: 120, nullable: true)]
+    private ?string $reference = null;
 
     #[ORM\Column(nullable: true)]
     private ?\DateTimeImmutable $sentAt = null;
@@ -52,6 +69,8 @@ class Notification
     public function setType(string $type): self { $this->type = $type; return $this; }
     public function isRead(): bool { return $this->isRead; }
     public function setIsRead(bool $isRead): self { $this->isRead = $isRead; return $this; }
+    public function getReference(): ?string { return $this->reference; }
+    public function setReference(?string $reference): self { $this->reference = $reference; return $this; }
     public function getSentAt(): ?\DateTimeImmutable { return $this->sentAt; }
     public function setSentAt(?\DateTimeImmutable $sentAt): self { $this->sentAt = $sentAt; return $this; }
     public function getCreatedAt(): \DateTimeImmutable { return $this->createdAt; }

@@ -3,6 +3,7 @@
 namespace App\Service;
 
 use App\Entity\FeeAssignment;
+use App\Entity\Notification;
 use App\Entity\Payment;
 use App\Entity\PaymentDetail;
 use App\Entity\Student;
@@ -17,6 +18,7 @@ class PaymentService
         private PaymentCalculationService $calculationService,
         private ReceiptService $receiptService,
         private AuditLoggerService $auditLogger,
+        private NotificationService $notifier,
     ) {
     }
 
@@ -77,6 +79,19 @@ class PaymentService
             $this->entityManager->persist($receipt);
             $this->auditLogger->log('paiement', Payment::class, null, 'Paiement enregistre pour ' . $student->getFullName(), $receivedBy);
 
+            $this->notifier->notifyGuardiansOf(
+                $student,
+                Notification::TYPE_NEW_PAYMENT,
+                'Paiement enregistre',
+                sprintf(
+                    'Un paiement de %s Ar a ete enregistre pour %s. Recu n %s disponible dans votre espace.',
+                    number_format($amount, 0, ',', ' '),
+                    $student->getFullName(),
+                    $receipt->getReceiptNumber(),
+                ),
+                'payment:' . $payment->getPaymentNumber() . ':enregistre',
+            );
+
             return $payment;
         });
     }
@@ -93,6 +108,22 @@ class PaymentService
         $payment->setCancelledBy($user);
         $payment->touch();
         $this->auditLogger->log('annulation_paiement', Payment::class, $payment->getId(), $reason, $user);
+
+        if ($payment->getStudent() instanceof Student) {
+            $this->notifier->notifyGuardiansOf(
+                $payment->getStudent(),
+                Notification::TYPE_PAYMENT_CANCELLED,
+                'Paiement annule',
+                sprintf(
+                    'Le paiement n %s de %s Ar a ete annule. Motif : %s',
+                    $payment->getPaymentNumber(),
+                    number_format((float) $payment->getTotalAmount(), 0, ',', ' '),
+                    trim($reason),
+                ),
+                'payment:' . $payment->getPaymentNumber() . ':annule',
+            );
+        }
+
         $this->entityManager->flush();
     }
 }

@@ -5,6 +5,7 @@ namespace App\Controller\Backoffice;
 use App\Entity\Discount;
 use App\Entity\FeeAssignment;
 use App\Entity\FeeType;
+use App\Entity\Notification;
 use App\Entity\ParentGuardian;
 use App\Entity\SchoolClass;
 use App\Entity\SchoolYear;
@@ -22,6 +23,7 @@ use App\Security\Voter\BackofficeVoter;
 use App\Service\AuditLoggerService;
 use App\Service\CsvExportService;
 use App\Service\ListFilterService;
+use App\Service\NotificationService;
 use App\Service\PaginationService;
 use App\Service\SchoolYearService;
 use Doctrine\ORM\EntityManagerInterface;
@@ -95,6 +97,7 @@ class CrudController extends AbstractController
         private EntityManagerInterface $entityManager,
         private UserPasswordHasherInterface $passwordHasher,
         private AuditLoggerService $auditLogger,
+        private NotificationService $notifier,
     ) {
     }
 
@@ -159,6 +162,7 @@ class CrudController extends AbstractController
             $this->handleUserPassword($entity, $form);
             $this->entityManager->persist($entity);
             $this->auditLogger->log('creation', $class, null, $config['label'] . ' cree', $this->getUser());
+            $this->welcomeParentAccount($entity);
             $this->entityManager->flush();
             $this->addFlash('success', 'Enregistrement cree.');
 
@@ -238,6 +242,25 @@ class CrudController extends AbstractController
         $options = $resource === 'users' && !$entity->getId() ? ['password_required' => true] : [];
 
         return $this->createForm($config['form'], $entity, $options);
+    }
+
+    /**
+     * Un compte parent nouvellement cree recoit un message d'accueil : c'est
+     * le seul moyen, sans envoi d'email, de lui signaler que son espace existe.
+     */
+    private function welcomeParentAccount(object $entity): void
+    {
+        if (!$entity instanceof User || !in_array('ROLE_PARENT', $entity->getRoles(), true)) {
+            return;
+        }
+
+        $this->notifier->notify(
+            $entity,
+            Notification::TYPE_PARENT_ACCOUNT,
+            'Bienvenue dans SchoolPay',
+            'Votre espace parent est pret. Vous pouvez y consulter la situation financiere de vos enfants, vos echeances et vos recus.',
+            'user:' . $entity->getEmail() . ':compte_parent',
+        );
     }
 
     private function handleUserPassword(object $entity, FormInterface $form): void
