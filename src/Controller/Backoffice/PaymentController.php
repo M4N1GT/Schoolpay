@@ -8,6 +8,7 @@ use App\Entity\User;
 use App\Repository\PaymentRepository;
 use App\Repository\StudentRepository;
 use App\Security\Voter\BackofficeVoter;
+use App\Service\PaginationService;
 use App\Service\PaymentCalculationService;
 use App\Service\PaymentService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -19,10 +20,18 @@ use Symfony\Component\Routing\Annotation\Route;
 class PaymentController extends AbstractController
 {
     #[Route('', name: 'backoffice_payment_index')]
-    public function index(PaymentRepository $payments): Response
+    public function index(Request $request, PaymentRepository $payments, PaginationService $paginator): Response
     {
+        $pagination = $paginator->paginate(
+            $payments->createQueryBuilder('p')
+                ->leftJoin('p.student', 's')->addSelect('s')
+                ->orderBy('p.paymentDate', 'DESC'),
+            $paginator->currentPage($request),
+        );
+
         return $this->render('backoffice/payment/index.html.twig', [
-            'payments' => $payments->findBy([], ['paymentDate' => 'DESC']),
+            'payments' => $pagination->items,
+            'pagination' => $pagination,
         ]);
     }
 

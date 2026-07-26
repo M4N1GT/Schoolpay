@@ -25,6 +25,9 @@ final class RoleAccessTest extends WebTestCase
     protected function setUp(): void
     {
         $this->client = static::createClient();
+        // Le kernel doit rester en place : un redemarrage ouvrirait une
+        // connexion qui ne verrait pas les donnees de la transaction de test.
+        $this->client->disableReboot();
         $this->em = self::getContainer()->get(EntityManagerInterface::class);
         $this->em->getConnection()->beginTransaction();
     }

@@ -145,8 +145,18 @@ input[type="checkbox"] { width: auto; }
     .content { padding: 16px; }
 }
 
+.pagination {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 12px;
+    margin-top: 16px;
+    padding-top: 12px;
+    border-top: 1px solid rgba(0, 0, 0, .08);
+}
+
 @media print {
-    .sidebar, .topbar, .no-print, .public-nav, .front-nav { display: none !important; }
+    .sidebar, .topbar, .no-print, .public-nav, .front-nav, .pagination { display: none !important; }
     body { background: #fff; }
     .receipt { border: 0; margin: 0; padding: 0; }
 }

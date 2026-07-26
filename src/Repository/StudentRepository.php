@@ -4,6 +4,7 @@ namespace App\Repository;
 
 use App\Entity\Student;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
+use Doctrine\ORM\QueryBuilder;
 use Doctrine\Persistence\ManagerRegistry;
 
 class StudentRepository extends ServiceEntityRepository
@@ -11,6 +12,11 @@ class StudentRepository extends ServiceEntityRepository
     public function __construct(ManagerRegistry $registry) { parent::__construct($registry, Student::class); }
 
     public function search(?string $query = null, array $filters = []): array
+    {
+        return $this->searchQueryBuilder($query, $filters)->getQuery()->getResult();
+    }
+
+    public function searchQueryBuilder(?string $query = null, array $filters = []): QueryBuilder
     {
         $qb = $this->createQueryBuilder('s')
             ->leftJoin('s.schoolClass', 'c')->addSelect('c')
@@ -30,6 +36,6 @@ class StudentRepository extends ServiceEntityRepository
             $qb->andWhere('c.id = :class')->setParameter('class', $filters['class']);
         }
 
-        return $qb->getQuery()->getResult();
+        return $qb;
     }
 }

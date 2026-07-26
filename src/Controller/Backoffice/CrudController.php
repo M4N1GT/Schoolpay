@@ -21,6 +21,7 @@ use App\Form\UserType;
 use App\Security\Voter\BackofficeVoter;
 use App\Service\AuditLoggerService;
 use App\Service\CsvExportService;
+use App\Service\PaginationService;
 use App\Service\SchoolYearService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -52,17 +53,22 @@ class CrudController extends AbstractController
     }
 
     #[Route('/{resource}', name: 'backoffice_crud_index', requirements: ['resource' => 'school-years|classes|students|parents|fee-types|fee-assignments|discounts|users'])]
-    public function index(string $resource, Request $request, CsvExportService $csvExport): Response
+    public function index(string $resource, Request $request, CsvExportService $csvExport, PaginationService $paginator): Response
     {
         $config = $this->config($resource);
         $repository = $this->entityManager->getRepository($config['class']);
         $query = trim((string) $request->query->get('q', ''));
-        $items = $resource === 'students'
-            ? $repository->search($query ?: null, $request->query->all())
-            : $repository->findBy([], ['id' => 'DESC']);
+        $queryBuilder = $resource === 'students'
+            ? $repository->searchQueryBuilder($query ?: null, $request->query->all())
+            : $repository->createQueryBuilder('e')->orderBy('e.id', 'DESC');
 
+        // L'export porte sur la selection complete, jamais sur la seule page
+        // affichee : il doit rester exploitable comme extraction de reference.
         if ($request->query->get('export') === 'csv') {
-            $rows = array_map(fn (object $item): array => $this->row($resource, $item), $items);
+            $rows = array_map(
+                fn (object $item): array => $this->row($resource, $item),
+                $queryBuilder->getQuery()->getResult()
+            );
 
             return new Response($csvExport->build($rows, $config['headers']), 200, [
                 'Content-Type' => 'text/csv; charset=UTF-8',
@@ -70,11 +76,14 @@ class CrudController extends AbstractController
             ]);
         }
 
+        $pagination = $paginator->paginate($queryBuilder, $paginator->currentPage($request));
+
         return $this->render('backoffice/crud/index.html.twig', [
             'resource' => $resource,
             'title' => $config['label'],
             'headers' => $config['headers'],
-            'items' => $items,
+            'items' => $pagination->items,
+            'pagination' => $pagination,
             'query' => $query,
         ]);
     }

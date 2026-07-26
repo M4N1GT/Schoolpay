@@ -1,0 +1,22 @@
+{# Navigation de pagination reutilisable.
+   Les parametres de route et de requete courants sont conserves afin que la
+   recherche et les filtres survivent au changement de page (cahier des
+   charges, section 24). #}
+{% if pagination.total > 0 %}
+    {% set base = app.request.attributes.get('_route_params')|merge(app.request.query.all) %}
+    {% set route = app.request.attributes.get('_route') %}
+    <nav class="pagination" aria-label="Pagination">
+        <span class="muted">
+            Resultats {{ pagination.firstResult }} a {{ pagination.lastResult }} sur {{ pagination.total }}
+        </span>
+        {% if pagination.pages > 1 %}
+            {% if pagination.hasPrevious %}
+                <a class="button ghost" href="{{ path(route, base|merge({page: pagination.page - 1})) }}" rel="prev">Precedent</a>
+            {% endif %}
+            <span class="muted">Page {{ pagination.page }} sur {{ pagination.pages }}</span>
+            {% if pagination.hasNext %}
+                <a class="button ghost" href="{{ path(route, base|merge({page: pagination.page + 1})) }}" rel="next">Suivant</a>
+            {% endif %}
+        {% endif %}
+    </nav>
+{% endif %}

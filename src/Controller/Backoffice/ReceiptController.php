@@ -4,8 +4,10 @@ namespace App\Controller\Backoffice;
 
 use App\Repository\ReceiptRepository;
 use App\Repository\SchoolSettingRepository;
+use App\Service\PaginationService;
 use App\Service\PaymentCalculationService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 
@@ -13,10 +15,19 @@ use Symfony\Component\Routing\Annotation\Route;
 class ReceiptController extends AbstractController
 {
     #[Route('', name: 'backoffice_receipt_index')]
-    public function index(ReceiptRepository $receipts): Response
+    public function index(Request $request, ReceiptRepository $receipts, PaginationService $paginator): Response
     {
+        $pagination = $paginator->paginate(
+            $receipts->createQueryBuilder('r')
+                ->leftJoin('r.payment', 'p')->addSelect('p')
+                ->leftJoin('p.student', 's')->addSelect('s')
+                ->orderBy('r.generatedAt', 'DESC'),
+            $paginator->currentPage($request),
+        );
+
         return $this->render('backoffice/receipt/index.html.twig', [
-            'receipts' => $receipts->findBy([], ['generatedAt' => 'DESC']),
+            'receipts' => $pagination->items,
+            'pagination' => $pagination,
         ]);
     }
 

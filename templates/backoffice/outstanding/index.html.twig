@@ -3,6 +3,13 @@
 {% block page_title %}Impayes{% endblock %}
 
 {% block content %}
+<form method="get" class="panel grid-form" style="margin-bottom: 16px;">
+    <div>
+        <label for="q">Recherche</label>
+        <input id="q" name="q" value="{{ query }}" placeholder="Nom, matricule, telephone parent...">
+    </div>
+    <button>Filtrer</button>
+</form>
 <section class="table-panel">
     <table>
         <thead><tr><th>Eleve</th><th>Classe</th><th>Parent</th><th>Telephone</th><th>Reste</th><th>Action</th></tr></thead>
@@ -15,12 +22,22 @@
                 <td>{{ parent ? parent.fullName : 'N/A' }}</td>
                 <td>{{ parent ? parent.phone : 'N/A' }}</td>
                 <td>{{ row.situation.remainingTotal|number_format(0, ',', ' ') }} Ar</td>
-                <td><a class="button" href="{{ path('backoffice_payment_student', {id: row.student.id}) }}">Encaisser</a></td>
+                <td>
+                    {% if is_granted('MANAGE', 'payments') %}
+                        <a class="button" href="{{ path('backoffice_payment_student', {id: row.student.id}) }}">Encaisser</a>
+                    {% else %}
+                        <a class="button ghost" href="{{ path('backoffice_payment_student', {id: row.student.id}) }}">Consulter</a>
+                    {% endif %}
+                </td>
             </tr>
         {% else %}
-            <tr><td colspan="6">Aucun impaye detecte.</td></tr>
+            <tr><td colspan="6">Aucun impaye sur cette page.</td></tr>
         {% endfor %}
         </tbody>
     </table>
+    {{ include('_partials/pagination.html.twig') }}
+    <p class="muted" style="margin-top: 8px;">
+        {{ rows|length }} eleve{{ rows|length > 1 ? 's' : '' }} en impaye parmi les {{ pagination.items|length }} examine{{ pagination.items|length > 1 ? 's' : '' }} sur cette page.
+    </p>
 </section>
 {% endblock %}
