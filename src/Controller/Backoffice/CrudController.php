@@ -10,6 +10,7 @@ use App\Entity\ParentGuardian;
 use App\Entity\SchoolClass;
 use App\Entity\SchoolYear;
 use App\Entity\Student;
+use App\Entity\StudentDiscount;
 use App\Entity\User;
 use App\Form\DiscountType;
 use App\Form\FeeAssignmentType;
@@ -17,6 +18,7 @@ use App\Form\FeeTypeType;
 use App\Form\ParentGuardianType;
 use App\Form\SchoolClassType;
 use App\Form\SchoolYearType;
+use App\Form\StudentDiscountType;
 use App\Form\StudentType;
 use App\Form\UserType;
 use App\Security\Voter\BackofficeVoter;
@@ -85,6 +87,13 @@ class CrudController extends AbstractController
             'search' => ['e.name', 'e.reason'],
             'sort' => ['Nom' => 'e.name', 'Type' => 'e.type', 'Valeur' => 'e.value'],
         ],
+        'student-discounts' => [
+            'class' => StudentDiscount::class, 'form' => StudentDiscountType::class, 'label' => 'Reductions accordees',
+            'headers' => ['Eleve', 'Reduction', 'Cible', 'Annee', 'Approuve par', 'Justification'],
+            'joins' => ['e.student' => 'st', 'e.discount' => 'di'],
+            'search' => ['st.firstName', 'st.lastName', 'st.registrationNumber', 'di.name', 'e.justification'],
+            'sort' => ['Eleve' => 'st.lastName', 'Reduction' => 'di.name'],
+        ],
         'users' => [
             'class' => User::class, 'form' => UserType::class, 'label' => 'Utilisateurs',
             'headers' => ['Nom', 'Email', 'Roles', 'Statut'],
@@ -101,7 +110,7 @@ class CrudController extends AbstractController
     ) {
     }
 
-    #[Route('/{resource}', name: 'backoffice_crud_index', requirements: ['resource' => 'school-years|classes|students|parents|fee-types|fee-assignments|discounts|users'])]
+    #[Route('/{resource}', name: 'backoffice_crud_index', requirements: ['resource' => 'school-years|classes|students|parents|fee-types|fee-assignments|discounts|student-discounts|users'])]
     public function index(string $resource, Request $request, CsvExportService $csvExport, PaginationService $paginator, ListFilterService $filters): Response
     {
         $config = $this->config($resource);
@@ -148,7 +157,7 @@ class CrudController extends AbstractController
         ]);
     }
 
-    #[Route('/{resource}/new', name: 'backoffice_crud_new', requirements: ['resource' => 'school-years|classes|students|parents|fee-types|fee-assignments|discounts|users'])]
+    #[Route('/{resource}/new', name: 'backoffice_crud_new', requirements: ['resource' => 'school-years|classes|students|parents|fee-types|fee-assignments|discounts|student-discounts|users'])]
     public function new(string $resource, Request $request): Response
     {
         $this->denyAccessUnlessGranted(BackofficeVoter::MANAGE, $resource);
@@ -163,6 +172,7 @@ class CrudController extends AbstractController
             $this->entityManager->persist($entity);
             $this->auditLogger->log('creation', $class, null, $config['label'] . ' cree', $this->getUser());
             $this->welcomeParentAccount($entity);
+            $this->announceGrantedDiscount($entity);
             $this->entityManager->flush();
             $this->addFlash('success', 'Enregistrement cree.');
 
@@ -176,7 +186,7 @@ class CrudController extends AbstractController
         ]);
     }
 
-    #[Route('/{resource}/{id}/edit', name: 'backoffice_crud_edit', requirements: ['resource' => 'school-years|classes|students|parents|fee-types|fee-assignments|discounts|users'])]
+    #[Route('/{resource}/{id}/edit', name: 'backoffice_crud_edit', requirements: ['resource' => 'school-years|classes|students|parents|fee-types|fee-assignments|discounts|student-discounts|users'])]
     public function edit(string $resource, int $id, Request $request, SchoolYearService $schoolYearService): Response
     {
         $this->denyAccessUnlessGranted(BackofficeVoter::MANAGE, $resource);
@@ -213,7 +223,7 @@ class CrudController extends AbstractController
         ]);
     }
 
-    #[Route('/{resource}/{id}', name: 'backoffice_crud_show', requirements: ['resource' => 'school-years|classes|students|parents|fee-types|fee-assignments|discounts|users'])]
+    #[Route('/{resource}/{id}', name: 'backoffice_crud_show', requirements: ['resource' => 'school-years|classes|students|parents|fee-types|fee-assignments|discounts|student-discounts|users'])]
     public function show(string $resource, int $id): Response
     {
         $config = $this->config($resource);
@@ -263,6 +273,41 @@ class CrudController extends AbstractController
         );
     }
 
+    /**
+     * Une reduction accordee est approuvee par l'utilisateur qui la saisit, et
+     * les responsables legaux en sont informes : c'est une decision financiere
+     * qui doit laisser une trace nominative et etre portee a leur connaissance
+     * (sections 15 et 20).
+     */
+    private function announceGrantedDiscount(object $entity): void
+    {
+        if (!$entity instanceof StudentDiscount || !$entity->getStudent() instanceof Student) {
+            return;
+        }
+
+        if ($entity->getApprovedBy() === null && $this->getUser() instanceof User) {
+            $entity->setApprovedBy($this->getUser());
+        }
+
+        $discount = $entity->getDiscount();
+        $value = $discount?->getType() === Discount::TYPE_PERCENT
+            ? $discount->getValue() . ' %'
+            : number_format((float) $discount?->getValue(), 0, ',', ' ') . ' Ar';
+
+        $this->notifier->notifyGuardiansOf(
+            $entity->getStudent(),
+            Notification::TYPE_DISCOUNT_GRANTED,
+            'Reduction accordee',
+            sprintf(
+                'Une reduction "%s" de %s a ete accordee a %s pour l annee %s.',
+                $discount?->getName() ?? 'reduction',
+                $value,
+                $entity->getStudent()->getFullName(),
+                (string) $entity->getSchoolYear(),
+            ),
+        );
+    }
+
     private function handleUserPassword(object $entity, FormInterface $form): void
     {
         if (!$entity instanceof User) {
@@ -285,6 +330,14 @@ class CrudController extends AbstractController
             'fee-types' => [$item->getName(), $item->getCode(), $item->isMandatory() ? 'Oui' : 'Non', $item->isActive() ? 'Actif' : 'Inactif'],
             'fee-assignments' => [(string) $item->getFeeType(), $item->getStudent()?->getFullName() ?: (string) $item->getSchoolClass(), number_format((float) $item->getAmount(), 0, ',', ' ') . ' Ar', $item->getDueDate()?->format('d/m/Y')],
             'discounts' => [$item->getName(), $item->getType(), $item->getValue(), $item->isActive() ? 'Active' : 'Inactive'],
+            'student-discounts' => [
+                $item->getStudent()?->getFullName() ?? '',
+                (string) $item->getDiscount(),
+                $item->getFeeAssignment() ? (string) $item->getFeeAssignment() : 'Tous les frais',
+                (string) $item->getSchoolYear(),
+                $item->getApprovedBy()?->getFullName() ?? 'Non renseigne',
+                $item->getJustification() ?? '',
+            ],
             'users' => [$item->getFullName(), $item->getEmail(), implode(', ', $item->getRoles()), $item->isActive() ? 'Actif' : 'Inactif'],
             default => [],
         };

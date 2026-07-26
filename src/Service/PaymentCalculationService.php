@@ -84,14 +84,23 @@ class PaymentCalculationService
     private function calculateDiscount(Student $student, FeeAssignment $feeAssignment, float $gross): float
     {
         $discount = 0.0;
+        $today = new \DateTimeImmutable('today');
 
         foreach ($this->studentDiscounts->findBy(['student' => $student]) as $studentDiscount) {
+            // Reduction ciblant un frais precis : elle ne vaut que pour lui.
             if ($studentDiscount->getFeeAssignment() && $studentDiscount->getFeeAssignment() !== $feeAssignment) {
                 continue;
             }
 
+            // Une reduction accordee au titre d'une annee scolaire ne doit pas
+            // se reporter sur les frais d'une autre annee.
+            $grantedFor = $studentDiscount->getSchoolYear();
+            if ($grantedFor && $feeAssignment->getSchoolYear() && $grantedFor !== $feeAssignment->getSchoolYear()) {
+                continue;
+            }
+
             $definition = $studentDiscount->getDiscount();
-            if (!$definition?->isActive()) {
+            if (!$definition?->isActive() || !$this->isInEffect($definition, $today)) {
                 continue;
             }
 
@@ -100,7 +109,22 @@ class PaymentCalculationService
                 : (float) $definition->getValue();
         }
 
+        // Plafonnement : une reduction ne rend jamais le montant negatif.
         return min($gross, $discount);
+    }
+
+    /**
+     * Une reduction bornee dans le temps cesse de s'appliquer hors de sa
+     * periode : sans ce controle, une remise exceptionnelle expiree
+     * continuerait indefiniment a diminuer les montants dus.
+     */
+    private function isInEffect(Discount $discount, \DateTimeImmutable $today): bool
+    {
+        if ($discount->getStartDate() && $discount->getStartDate() > $today) {
+            return false;
+        }
+
+        return !($discount->getEndDate() && $discount->getEndDate() < $today);
     }
 
     private function getFeeStatus(FeeAssignment $feeAssignment, float $net, float $paid): string

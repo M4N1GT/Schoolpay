@@ -36,6 +36,7 @@ class BackofficeVoter extends Voter
         'fee-types' => ['ROLE_ADMIN'],
         'fee-assignments' => ['ROLE_ADMIN'],
         'discounts' => ['ROLE_ADMIN'],
+        'student-discounts' => ['ROLE_ADMIN'],
         'users' => ['ROLE_ADMIN'],
         'settings' => ['ROLE_ADMIN'],
         self::PAYMENTS => ['ROLE_ADMIN', 'ROLE_COMPTABLE'],
