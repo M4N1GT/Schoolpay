@@ -32,4 +32,41 @@ class PaymentDetailRepository extends ServiceEntityRepository
             ->getQuery()
             ->getSingleScalarResult();
     }
+
+    /**
+     * Encaissements ventiles par type de frais.
+     *
+     * Passe par le detail des affectations et non par le montant du paiement :
+     * un versement unique peut couvrir plusieurs types de frais, et seul le
+     * detail sait ce qui est alle sur quoi.
+     *
+     * @return array<int, array{label: string, count: int, total: float}>
+     */
+    public function reportByFeeType(\DateTimeImmutable $from, \DateTimeImmutable $to): array
+    {
+        $rows = $this->createQueryBuilder('d')
+            ->select('ft.name AS label', 'COUNT(d.id) AS nb', 'COALESCE(SUM(d.amount), 0) AS total')
+            ->join('d.payment', 'p')
+            ->join('d.feeAssignment', 'f')
+            ->join('f.feeType', 'ft')
+            ->andWhere('p.status != :cancelled')
+            ->andWhere('p.paymentDate >= :from')
+            ->andWhere('p.paymentDate < :to')
+            ->setParameter('cancelled', Payment::STATUS_CANCELLED)
+            ->setParameter('from', $from)
+            ->setParameter('to', $to)
+            ->groupBy('ft.id')
+            ->orderBy('total', 'DESC')
+            ->getQuery()
+            ->getArrayResult();
+
+        return array_map(
+            static fn (array $row): array => [
+                'label' => (string) $row['label'],
+                'count' => (int) $row['nb'],
+                'total' => (float) $row['total'],
+            ],
+            $rows
+        );
+    }
 }

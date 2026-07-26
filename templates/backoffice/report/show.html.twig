@@ -1,0 +1,77 @@
+{% extends 'backoffice/layout.html.twig' %}
+
+{% block title %}{{ result.label }} | SchoolPay{% endblock %}
+{% block page_title %}{{ result.label }}{% endblock %}
+
+{% block content %}
+<form method="get" class="panel grid-form no-print">
+    <div>
+        <label for="report">Rapport</label>
+        <select id="report" name="report" onchange="location = this.value;">
+            {% for reportKey, label in catalogue %}
+                <option value="{{ path('backoffice_report_show', {key: reportKey, from: from, to: to}) }}" {{ reportKey == key ? 'selected' : '' }}>{{ label }}</option>
+            {% endfor %}
+        </select>
+    </div>
+    <div>
+        <label for="from">Du</label>
+        <input id="from" type="date" name="from" value="{{ from }}">
+    </div>
+    <div>
+        <label for="to">Au</label>
+        <input id="to" type="date" name="to" value="{{ to }}">
+    </div>
+    <div class="actions">
+        <button>Appliquer</button>
+        <a class="button ghost" href="{{ path('backoffice_report_show', {key: key, from: from, to: to, export: 'csv'}) }}">Export CSV</a>
+        <button type="button" class="button secondary" onclick="window.print()">Imprimer</button>
+    </div>
+</form>
+
+<section class="table-panel" style="margin-top: 16px;">
+    <h2>{{ result.label }}</h2>
+    <p class="muted">Periode du {{ from|date('d/m/Y') }} au {{ to|date('d/m/Y') }}.</p>
+
+    {% if result.isEmpty %}
+        <p class="muted">Aucune donnee sur cette periode.</p>
+    {% else %}
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr>{% for header in result.headers %}<th>{{ header }}</th>{% endfor %}</tr>
+                </thead>
+                <tbody>
+                {% for row in result.rows %}
+                    <tr>
+                        {% for index, cell in row %}
+                            <td>
+                                {%- if result.isAmountColumn(index) and cell is not empty -%}
+                                    {{ cell|number_format(0, ',', ' ') }} Ar
+                                {%- else -%}
+                                    {{ cell }}
+                                {%- endif -%}
+                            </td>
+                        {% endfor %}
+                    </tr>
+                {% endfor %}
+                </tbody>
+                {% if result.totals is not empty %}
+                    <tfoot>
+                        <tr>
+                            {% for index, cell in result.totals %}
+                                <th>
+                                    {%- if result.isAmountColumn(index) and cell is not empty -%}
+                                        {{ cell|number_format(0, ',', ' ') }} Ar
+                                    {%- else -%}
+                                        {{ cell }}
+                                    {%- endif -%}
+                                </th>
+                            {% endfor %}
+                        </tr>
+                    </tfoot>
+                {% endif %}
+            </table>
+        </div>
+    {% endif %}
+</section>
+{% endblock %}
