@@ -1,0 +1,23 @@
+{# Graphique en barres horizontales, en CSS pur.
+   Le cahier des charges suggere Chart.js, ecarte ici a dessein : une
+   dependance chargee depuis un CDN rendrait le back-office tributaire d une
+   connexion sortante, ce qui ne convient pas a une ecole. Ces barres
+   s affichent hors ligne et s impriment proprement.
+
+   Parametres : series (libelle => montant), unit, empty #}
+{% set maximum = series is empty ? 0 : max(series) %}
+{% if series is empty or maximum <= 0 %}
+    <p class="muted">{{ empty|default('Aucune donnee sur la periode.') }}</p>
+{% else %}
+    <div class="bar-chart">
+        {% for label, value in series %}
+            <div class="bar-row">
+                <span class="bar-label">{{ label }}</span>
+                <span class="bar-track">
+                    <span class="bar-fill" style="width: {{ (value / maximum * 100)|round(1) }}%"></span>
+                </span>
+                <span class="bar-value">{{ value|number_format(0, ',', ' ') }} {{ unit|default('Ar') }}</span>
+            </div>
+        {% endfor %}
+    </div>
+{% endif %}

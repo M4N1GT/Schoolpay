@@ -106,6 +106,9 @@ button, input, select, textarea { font: inherit; }
 .content h1 { margin-top: 0; }
 .flash { padding: 12px 14px; border-radius: var(--radius); margin-bottom: 12px; background: #ecfdf5; border: 1px solid #bbf7d0; }
 .flash-error { background: #fff7ed; border-color: #fed7aa; }
+.flash-success { background: #ecfdf5; border-color: #bbf7d0; }
+.flash-info { background: #eff6ff; border-color: #bfdbfe; }
+.flash-warn { background: #fffbeb; border-color: #fde68a; }
 .table-wrap { overflow-x: auto; }
 table { width: 100%; border-collapse: collapse; }
 th, td { text-align: left; padding: 11px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
@@ -143,6 +146,29 @@ input[type="checkbox"] { width: auto; }
     .sidebar nav { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     .topbar { padding: 0 14px; }
     .content { padding: 16px; }
+}
+
+.bar-chart { display: flex; flex-direction: column; gap: 8px; margin-top: 12px; }
+
+.bar-row {
+    display: grid;
+    grid-template-columns: minmax(90px, 1fr) minmax(80px, 3fr) minmax(90px, auto);
+    align-items: center;
+    gap: 10px;
+    font-size: .9rem;
+}
+
+.bar-label { color: #475569; overflow-wrap: anywhere; }
+
+.bar-track { background: rgba(0, 0, 0, .07); border-radius: 999px; height: 12px; overflow: hidden; }
+
+.bar-fill { display: block; height: 100%; background: var(--brand); border-radius: 999px; }
+
+.bar-value { text-align: right; font-variant-numeric: tabular-nums; font-weight: 600; }
+
+@media (max-width: 640px) {
+    .bar-row { grid-template-columns: 1fr auto; }
+    .bar-track { grid-column: 1 / -1; }
 }
 
 .pagination {

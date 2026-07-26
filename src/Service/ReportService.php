@@ -22,11 +22,15 @@ class ReportService
     {
         $expected = 0.0;
         $paid = 0.0;
+        $unpaidStudents = 0;
 
         foreach ($this->students->findAll() as $student) {
             $situation = $this->calculator->getStudentSituation($student);
             $expected += $situation['netTotal'];
             $paid += $situation['paidTotal'];
+            if ($situation['remainingTotal'] > 0) {
+                ++$unpaidStudents;
+            }
         }
 
         return [
@@ -35,6 +39,7 @@ class ReportService
             'paid' => $paid,
             'remaining' => max(0.0, $expected - $paid),
             'collectionRate' => $expected > 0 ? round(($paid / $expected) * 100, 1) : 0,
+            'unpaidStudents' => $unpaidStudents,
         ];
     }
 }

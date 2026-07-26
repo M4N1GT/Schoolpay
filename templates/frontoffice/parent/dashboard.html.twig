@@ -8,20 +8,63 @@
     <section class="panel">
         <p>Aucun profil parent n est associe a ce compte.</p>
     </section>
+{% else %}
+    <div class="stats-row">
+        <div class="stat-card"><span class="stat-value">{{ children|length }}</span><span class="stat-label">Enfant{{ children|length > 1 ? 's' : '' }}</span></div>
+        <div class="stat-card"><span class="stat-value">{{ totals.expected|number_format(0, ',', ' ') }} Ar</span><span class="stat-label">Total attendu</span></div>
+        <div class="stat-card"><span class="stat-value">{{ totals.paid|number_format(0, ',', ' ') }} Ar</span><span class="stat-label">Deja paye</span></div>
+        <div class="stat-card"><span class="stat-value">{{ totals.remaining|number_format(0, ',', ' ') }} Ar</span><span class="stat-label">Reste a payer</span></div>
+    </div>
+
+    {% if unreadCount > 0 %}
+        <div class="flash flash-info" style="margin-top: 16px;">
+            Vous avez {{ unreadCount }} notification{{ unreadCount > 1 ? 's' : '' }} non lue{{ unreadCount > 1 ? 's' : '' }}.
+            <a href="{{ path('parent_notifications') }}">Les consulter</a>
+        </div>
+    {% endif %}
 {% endif %}
-<div class="cards-grid">
+
+<div class="cards-grid" style="margin-top: 18px;">
     {% for child in children %}
         {% set situation = situations[child.id] %}
         <article class="panel">
             <h2>{{ child.fullName }}</h2>
             <p class="muted">{{ child.registrationNumber }} | {{ child.schoolClass }}</p>
-            <p><strong>{{ situation.remainingTotal|number_format(0, ',', ' ') }} Ar</strong> restant a payer</p>
+            <p>
+                <strong>{{ situation.remainingTotal|number_format(0, ',', ' ') }} Ar</strong> restant a payer
+                {% if situation.remainingTotal <= 0 %}
+                    <span class="badge ok">A jour</span>
+                {% endif %}
+            </p>
             <a class="button" href="{{ path('parent_child_show', {id: child.id}) }}">Voir le detail</a>
         </article>
     {% else %}
         <article class="panel">Aucun enfant associe.</article>
     {% endfor %}
 </div>
+
+{% if upcoming is not empty %}
+    <section class="panel" style="margin-top: 18px;">
+        <h2>Prochaines echeances</h2>
+        <div class="table-wrap">
+            <table>
+                <thead><tr><th>Echeance</th><th>Enfant</th><th>Frais</th><th>Reste</th><th>Statut</th></tr></thead>
+                <tbody>
+                {% for row in upcoming %}
+                    <tr>
+                        <td>{{ row.item.fee.dueDate|date('d/m/Y') }}</td>
+                        <td>{{ row.student.fullName }}</td>
+                        <td>{{ row.item.fee.feeType.name }}</td>
+                        <td>{{ row.item.remaining|number_format(0, ',', ' ') }} Ar</td>
+                        <td><span class="badge {{ row.item.status == 'en_retard' ? 'danger' : 'warn' }}">{{ row.item.status }}</span></td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </section>
+{% endif %}
+
 <section class="panel" style="margin-top: 18px;">
     <h2>Notifications recentes</h2>
     <table>

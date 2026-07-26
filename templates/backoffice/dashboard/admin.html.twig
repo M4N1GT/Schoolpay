@@ -1,0 +1,77 @@
+{% extends 'backoffice/layout.html.twig' %}
+
+{% block title %}Tableau de bord | SchoolPay{% endblock %}
+{% block page_title %}Tableau de bord administrateur{% endblock %}
+
+{% block content %}
+<div class="stats-row">
+    <div class="stat-card"><span class="stat-value">{{ stats.students }}</span><span class="stat-label">Eleves</span></div>
+    <div class="stat-card"><span class="stat-value">{{ stats.parents }}</span><span class="stat-label">Parents</span></div>
+    <div class="stat-card"><span class="stat-value">{{ stats.classes }}</span><span class="stat-label">Classes</span></div>
+    <div class="stat-card"><span class="stat-value">{{ stats.users }}</span><span class="stat-label">Utilisateurs</span></div>
+</div>
+
+<div class="stats-row" style="margin-top: 14px;">
+    <div class="stat-card"><span class="stat-value">{{ overview.expected|number_format(0, ',', ' ') }} Ar</span><span class="stat-label">Attendu</span></div>
+    <div class="stat-card"><span class="stat-value">{{ overview.paid|number_format(0, ',', ' ') }} Ar</span><span class="stat-label">Encaisse</span></div>
+    <div class="stat-card"><span class="stat-value">{{ overview.remaining|number_format(0, ',', ' ') }} Ar</span><span class="stat-label">Reste</span></div>
+    <div class="stat-card"><span class="stat-value">{{ overview.collectionRate }}%</span><span class="stat-label">Recouvrement</span></div>
+</div>
+
+<div class="stats-row" style="margin-top: 14px;">
+    <div class="stat-card">
+        <span class="stat-value">{{ today.total|number_format(0, ',', ' ') }} Ar</span>
+        <span class="stat-label">Encaisse aujourd hui ({{ today.count }} paiement{{ today.count > 1 ? 's' : '' }})</span>
+    </div>
+    <div class="stat-card">
+        <span class="stat-value">{{ month.total|number_format(0, ',', ' ') }} Ar</span>
+        <span class="stat-label">Encaisse ce mois ({{ month.count }} paiement{{ month.count > 1 ? 's' : '' }})</span>
+    </div>
+    <div class="stat-card"><span class="stat-value">{{ stats.receipts }}</span><span class="stat-label">Recus emis</span></div>
+    <div class="stat-card"><span class="stat-value">{{ overview.unpaidStudents }}</span><span class="stat-label">Eleves en impaye</span></div>
+</div>
+
+{% if overview.unpaidStudents > 0 %}
+    <div class="flash flash-warn" style="margin-top: 16px;">
+        {{ overview.unpaidStudents }} eleve{{ overview.unpaidStudents > 1 ? 's ont' : ' a' }} un reste a payer.
+        <a href="{{ path('backoffice_outstanding_index') }}">Consulter les impayes</a>
+    </div>
+{% endif %}
+
+<div class="cards-grid" style="margin-top: 18px;">
+    <section class="panel">
+        <h2>Paiements recents</h2>
+        <div class="table-wrap">
+            <table>
+                <thead><tr><th>Numero</th><th>Eleve</th><th>Montant</th><th>Statut</th></tr></thead>
+                <tbody>
+                {% for payment in recentPayments %}
+                    <tr>
+                        <td>{{ payment.paymentNumber }}</td>
+                        <td>{{ payment.student.fullName }}</td>
+                        <td>{{ payment.totalAmount|number_format(0, ',', ' ') }} Ar</td>
+                        <td><span class="badge {{ payment.status == 'annule' ? 'danger' : 'ok' }}">{{ payment.status }}</span></td>
+                    </tr>
+                {% else %}
+                    <tr><td colspan="4">Aucun paiement.</td></tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </section>
+    <section class="panel">
+        <h2>Activite recente</h2>
+        <div class="table-wrap">
+            <table>
+                <tbody>
+                {% for audit in recentAudits %}
+                    <tr><td>{{ audit.createdAt|date('d/m/Y H:i') }}</td><td>{{ audit.action }}</td><td>{{ audit.description }}</td></tr>
+                {% else %}
+                    <tr><td>Aucune activite.</td></tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </section>
+</div>
+{% endblock %}

@@ -1,0 +1,47 @@
+{% extends 'backoffice/layout.html.twig' %}
+
+{% block title %}Tableau de bord | SchoolPay{% endblock %}
+{% block page_title %}Tableau de bord direction{% endblock %}
+
+{% block content %}
+<div class="stats-row">
+    <div class="stat-card"><span class="stat-value">{{ overview.expected|number_format(0, ',', ' ') }} Ar</span><span class="stat-label">Attendu</span></div>
+    <div class="stat-card"><span class="stat-value">{{ overview.paid|number_format(0, ',', ' ') }} Ar</span><span class="stat-label">Encaisse</span></div>
+    <div class="stat-card"><span class="stat-value">{{ overview.remaining|number_format(0, ',', ' ') }} Ar</span><span class="stat-label">Impayes</span></div>
+    <div class="stat-card"><span class="stat-value">{{ overview.collectionRate }}%</span><span class="stat-label">Recouvrement</span></div>
+</div>
+
+{% if overview.unpaidStudents > 0 %}
+    <div class="flash flash-warn" style="margin-top: 16px;">
+        {{ overview.unpaidStudents }} eleve{{ overview.unpaidStudents > 1 ? 's' : '' }} sur {{ overview.students }} presente{{ overview.unpaidStudents > 1 ? 'nt' : '' }} un reste a payer,
+        soit {{ overview.remaining|number_format(0, ',', ' ') }} Ar a recouvrer.
+        <a href="{{ path('backoffice_outstanding_index') }}">Detail</a>
+    </div>
+{% endif %}
+
+<div class="stats-row" style="margin-top: 14px;">
+    <div class="stat-card"><span class="stat-value">{{ today.total|number_format(0, ',', ' ') }} Ar</span><span class="stat-label">Recettes du jour</span></div>
+    <div class="stat-card"><span class="stat-value">{{ today.count }}</span><span class="stat-label">Operations du jour</span></div>
+</div>
+
+<section class="panel" style="margin-top: 18px;">
+    <h2>Recettes des 14 derniers jours</h2>
+    {{ include('_partials/bar_chart.html.twig', {series: byDay}) }}
+</section>
+
+<section class="panel" style="margin-top: 18px;">
+    <h2>Recettes des 12 derniers mois</h2>
+    {{ include('_partials/bar_chart.html.twig', {series: byMonth}) }}
+</section>
+
+<div class="cards-grid" style="margin-top: 18px;">
+    <section class="panel">
+        <h2>Recettes par classe</h2>
+        {{ include('_partials/bar_chart.html.twig', {series: byClass}) }}
+    </section>
+    <section class="panel">
+        <h2>Recettes par niveau</h2>
+        {{ include('_partials/bar_chart.html.twig', {series: byLevel}) }}
+    </section>
+</div>
+{% endblock %}

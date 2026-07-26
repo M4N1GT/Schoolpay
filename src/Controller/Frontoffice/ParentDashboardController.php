@@ -20,16 +20,38 @@ class ParentDashboardController extends AbstractController
         $parent = $this->parentProfile();
         $children = $parent?->getStudents() ?? [];
         $situations = [];
+        $totals = ['expected' => 0.0, 'paid' => 0.0, 'remaining' => 0.0];
+        $upcoming = [];
 
         foreach ($children as $child) {
-            $situations[$child->getId()] = $calculator->getStudentSituation($child);
+            $situation = $calculator->getStudentSituation($child);
+            $situations[$child->getId()] = $situation;
+
+            $totals['expected'] += $situation['netTotal'];
+            $totals['paid'] += $situation['paidTotal'];
+            $totals['remaining'] += $situation['remainingTotal'];
+
+            foreach ($situation['items'] as $item) {
+                if ($item['remaining'] > 0 && $item['fee']->getDueDate()) {
+                    $upcoming[] = ['student' => $child, 'item' => $item];
+                }
+            }
         }
+
+        // Echeances les plus proches en tete, tous enfants confondus : c'est
+        // ce qu'un parent veut voir en arrivant.
+        usort($upcoming, fn (array $a, array $b): int => $a['item']['fee']->getDueDate() <=> $b['item']['fee']->getDueDate());
+
+        $user = $this->getUser();
 
         return $this->render('frontoffice/parent/dashboard.html.twig', [
             'parent' => $parent,
             'children' => $children,
             'situations' => $situations,
-            'notifications' => $this->getUser() instanceof User ? $notifications->findBy(['user' => $this->getUser()], ['createdAt' => 'DESC'], 5) : [],
+            'totals' => $totals,
+            'upcoming' => array_slice($upcoming, 0, 5),
+            'notifications' => $user instanceof User ? $notifications->findBy(['user' => $user], ['createdAt' => 'DESC'], 5) : [],
+            'unreadCount' => $user instanceof User ? $notifications->count(['user' => $user, 'isRead' => false]) : 0,
         ]);
     }
 
