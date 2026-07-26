@@ -1,0 +1,21 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Verification de recu{% endblock %}
+
+{% block body %}
+<main class="content">
+    <section class="panel">
+        <h1>Verification de recu</h1>
+        {% if receipt %}
+            <p><span class="badge ok">Recu valide</span></p>
+            <p>Numero: {{ receipt.receiptNumber }}</p>
+            <p>Date: {{ receipt.generatedAt|date('d/m/Y H:i') }}</p>
+            <p>Eleve: {{ receipt.payment.student.registrationNumber }} - {{ receipt.payment.student.fullName }}</p>
+            <p>Montant: {{ receipt.payment.totalAmount|number_format(0, ',', ' ') }} Ar</p>
+        {% else %}
+            <p><span class="badge danger">Code inconnu</span></p>
+            <p>Aucun recu ne correspond au code {{ code }}.</p>
+        {% endif %}
+    </section>
+</main>
+{% endblock %}

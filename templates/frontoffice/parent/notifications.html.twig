@@ -1,0 +1,24 @@
+{% extends 'frontoffice/layout.html.twig' %}
+
+{% block title %}Notifications | SchoolPay{% endblock %}
+
+{% block content %}
+<h1>Notifications</h1>
+<section class="table-panel">
+    <table>
+        <thead><tr><th>Date</th><th>Titre</th><th>Message</th><th>Statut</th></tr></thead>
+        <tbody>
+        {% for notification in notifications %}
+            <tr>
+                <td>{{ notification.createdAt|date('d/m/Y H:i') }}</td>
+                <td>{{ notification.title }}</td>
+                <td>{{ notification.message }}</td>
+                <td>{% if notification.read %}<span class="badge ok">Lue</span>{% else %}<a class="button ghost" href="{{ path('parent_notification_read', {id: notification.id}) }}">Marquer lue</a>{% endif %}</td>
+            </tr>
+        {% else %}
+            <tr><td colspan="4">Aucune notification.</td></tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</section>
+{% endblock %}

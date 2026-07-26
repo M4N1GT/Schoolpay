@@ -1,0 +1,39 @@
+{% extends 'frontoffice/layout.html.twig' %}
+
+{% block title %}{{ student.fullName }} | SchoolPay{% endblock %}
+
+{% block content %}
+<h1>{{ student.fullName }}</h1>
+<p class="muted">{{ student.registrationNumber }} | {{ student.schoolClass }} | {{ student.schoolYear }}</p>
+<div class="stats-row">
+    <div class="stat-card"><span class="stat-value">{{ situation.netTotal|number_format(0, ',', ' ') }} Ar</span><span class="stat-label">Attendu</span></div>
+    <div class="stat-card"><span class="stat-value">{{ situation.paidTotal|number_format(0, ',', ' ') }} Ar</span><span class="stat-label">Paye</span></div>
+    <div class="stat-card"><span class="stat-value">{{ situation.remainingTotal|number_format(0, ',', ' ') }} Ar</span><span class="stat-label">Reste</span></div>
+</div>
+<section class="table-panel" style="margin-top: 18px;">
+    <h2>Frais et echeances</h2>
+    <table>
+        <thead><tr><th>Frais</th><th>Echeance</th><th>Montant</th><th>Paye</th><th>Reste</th><th>Statut</th></tr></thead>
+        <tbody>
+        {% for item in situation.items %}
+            <tr><td>{{ item.fee.feeType.name }}</td><td>{{ item.fee.dueDate|date('d/m/Y') }}</td><td>{{ item.net|number_format(0, ',', ' ') }} Ar</td><td>{{ item.paid|number_format(0, ',', ' ') }} Ar</td><td>{{ item.remaining|number_format(0, ',', ' ') }} Ar</td><td><span class="badge">{{ item.status }}</span></td></tr>
+        {% else %}
+            <tr><td colspan="6">Aucun frais.</td></tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</section>
+<section class="table-panel" style="margin-top: 18px;">
+    <h2>Recus</h2>
+    <table>
+        <thead><tr><th>Numero</th><th>Date</th><th>Montant</th><th>Verification</th></tr></thead>
+        <tbody>
+        {% for receipt in receipts %}
+            <tr><td>{{ receipt.receiptNumber }}</td><td>{{ receipt.generatedAt|date('d/m/Y') }}</td><td>{{ receipt.payment.totalAmount|number_format(0, ',', ' ') }} Ar</td><td><a class="button ghost" href="{{ path('receipt_verify', {code: receipt.verificationCode}) }}">Verifier</a></td></tr>
+        {% else %}
+            <tr><td colspan="4">Aucun recu.</td></tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</section>
+{% endblock %}

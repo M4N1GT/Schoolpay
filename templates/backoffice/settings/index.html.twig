@@ -1,0 +1,12 @@
+{% extends 'backoffice/layout.html.twig' %}
+
+{% block page_title %}Parametres de l ecole{% endblock %}
+
+{% block content %}
+<section class="panel grid-form">
+    {{ form_start(form) }}
+        {{ form_widget(form) }}
+        <button>Enregistrer</button>
+    {{ form_end(form) }}
+</section>
+{% endblock %}

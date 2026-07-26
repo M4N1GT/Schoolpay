@@ -1,0 +1,46 @@
+{% extends 'base.html.twig' %}
+
+{% block body %}
+<div class="app-layout">
+    <aside class="sidebar">
+        <div class="brand">SchoolPay</div>
+        <div class="muted">Back-office</div>
+        <nav>
+            <a href="{{ path('backoffice_dashboard') }}">Tableau de bord</a>
+            <a href="{{ path('backoffice_crud_index', {resource: 'school-years'}) }}">Annees scolaires</a>
+            <a href="{{ path('backoffice_crud_index', {resource: 'classes'}) }}">Classes</a>
+            <a href="{{ path('backoffice_crud_index', {resource: 'students'}) }}">Eleves</a>
+            <a href="{{ path('backoffice_crud_index', {resource: 'parents'}) }}">Parents</a>
+            <a href="{{ path('backoffice_crud_index', {resource: 'fee-types'}) }}">Types de frais</a>
+            <a href="{{ path('backoffice_crud_index', {resource: 'fee-assignments'}) }}">Frais affectes</a>
+            <a href="{{ path('backoffice_payment_index') }}">Paiements</a>
+            <a href="{{ path('backoffice_crud_index', {resource: 'discounts'}) }}">Reductions</a>
+            <a href="{{ path('backoffice_outstanding_index') }}">Impayes</a>
+            <a href="{{ path('backoffice_receipt_index') }}">Recus</a>
+            <a href="{{ path('backoffice_report_index') }}">Rapports</a>
+            {% if is_granted('ROLE_ADMIN') %}
+                <a href="{{ path('backoffice_crud_index', {resource: 'users'}) }}">Utilisateurs</a>
+                <a href="{{ path('backoffice_audit_index') }}">Journal d audit</a>
+                <a href="{{ path('backoffice_settings') }}">Parametres</a>
+            {% endif %}
+        </nav>
+    </aside>
+    <main class="app-main">
+        <header class="topbar">
+            <strong>{% block page_title %}SchoolPay{% endblock %}</strong>
+            <div class="actions">
+                {% if app.user %}<span>{{ app.user.userIdentifier }}</span>{% endif %}
+                <a class="button ghost" href="{{ path('app_logout') }}">Deconnexion</a>
+            </div>
+        </header>
+        <section class="content">
+            {% for label, messages in app.flashes %}
+                {% for message in messages %}
+                    <div class="flash flash-{{ label }}">{{ message }}</div>
+                {% endfor %}
+            {% endfor %}
+            {% block content %}{% endblock %}
+        </section>
+    </main>
+</div>
+{% endblock %}

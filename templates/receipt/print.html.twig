@@ -1,0 +1,37 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Recu {{ receipt.receiptNumber }}{% endblock %}
+
+{% block body %}
+<div class="receipt">
+    <div class="receipt-header">
+        <div>
+            <h1>{{ settings.schoolName }}</h1>
+            <p>{{ settings.address }}<br>{{ settings.phone }} {{ settings.email }}</p>
+        </div>
+        <div>
+            <strong>Recu {{ receipt.receiptNumber }}</strong><br>
+            {{ receipt.generatedAt|date('d/m/Y H:i') }}<br>
+            Code: {{ receipt.verificationCode }}
+        </div>
+    </div>
+    <h2>{{ receipt.payment.student.fullName }}</h2>
+    <p>Matricule: {{ receipt.payment.student.registrationNumber }} | Classe: {{ receipt.payment.student.schoolClass }} | Annee: {{ receipt.payment.schoolYear }}</p>
+    <table>
+        <thead><tr><th>Frais</th><th>Montant paye</th></tr></thead>
+        <tbody>
+        {% for detail in receipt.payment.details %}
+            <tr><td>{{ detail.feeAssignment.feeType.name }}</td><td>{{ detail.amount|number_format(0, ',', ' ') }} {{ settings.currencySymbol }}</td></tr>
+        {% endfor %}
+        </tbody>
+    </table>
+    <h2>Total: {{ receipt.payment.totalAmount|number_format(0, ',', ' ') }} {{ settings.currencySymbol }}</h2>
+    <p>Mode: {{ receipt.payment.paymentMethod }} | Reference: {{ receipt.payment.externalReference ?: 'N/A' }} | Comptable: {{ receipt.payment.receivedBy ? receipt.payment.receivedBy.fullName : 'N/A' }}</p>
+    <p>Reste a payer: {{ situation.remainingTotal|number_format(0, ',', ' ') }} {{ settings.currencySymbol }}</p>
+    <p class="muted">{{ settings.receiptFooter }}</p>
+    <div class="actions no-print">
+        <button onclick="window.print()">Imprimer</button>
+        <a class="button ghost" href="{{ path('receipt_verify', {code: receipt.verificationCode}) }}">Verifier</a>
+    </div>
+</div>
+{% endblock %}

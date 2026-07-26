@@ -1,0 +1,16 @@
+{% extends 'backoffice/layout.html.twig' %}
+
+{% block title %}{{ title }} | SchoolPay{% endblock %}
+{% block page_title %}{{ title }}{% endblock %}
+
+{% block content %}
+<section class="panel grid-form">
+    {{ form_start(form) }}
+        {{ form_widget(form) }}
+        <div class="actions">
+            <button>Enregistrer</button>
+            <a class="button ghost" href="{{ path('backoffice_crud_index', {resource: resource}) }}">Annuler</a>
+        </div>
+    {{ form_end(form) }}
+</section>
+{% endblock %}

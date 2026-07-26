@@ -1,0 +1,17 @@
+{% extends 'frontoffice/layout.html.twig' %}
+
+{% block title %}Profil parent | SchoolPay{% endblock %}
+
+{% block content %}
+<h1>Profil parent</h1>
+<section class="panel">
+    {% if parent %}
+        <p><strong>{{ parent.fullName }}</strong></p>
+        <p>Email: {{ parent.email ?: 'N/A' }}</p>
+        <p>Telephone: {{ parent.phone }}</p>
+        <p>Adresse: {{ parent.address ?: 'N/A' }}</p>
+    {% else %}
+        <p>Aucun profil parent associe.</p>
+    {% endif %}
+</section>
+{% endblock %}

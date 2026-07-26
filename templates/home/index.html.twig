@@ -1,0 +1,41 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}SchoolPay | Gestion des paiements scolaires{% endblock %}
+
+{% block body %}
+<div class="public-shell">
+    <nav class="public-nav">
+        <a class="brand" href="{{ path('app_home') }}">SchoolPay</a>
+        <div class="actions">
+            <a href="{{ path('receipt_verify', {code: 'DEMO'}) }}">Verifier un recu</a>
+            <a class="button secondary" href="{{ path('app_login') }}">Connexion</a>
+        </div>
+    </nav>
+    <section class="public-hero">
+        <h1>SchoolPay</h1>
+        <p>Une application Symfony pour suivre les ecolages, les paiements partiels, les recus et la situation financiere des familles avec un back-office securise.</p>
+        <div class="hero-actions">
+            <a class="button secondary" href="{{ path('app_login') }}">Acceder a mon espace</a>
+            <a class="button ghost" href="#services">Voir les modules</a>
+        </div>
+        <div class="stats-row">
+            {% for stat in stats %}
+                <div class="stat-card">
+                    <span class="stat-value">{{ stat.value }}</span>
+                    <span class="stat-label">{{ stat.label }}</span>
+                </div>
+            {% endfor %}
+        </div>
+    </section>
+</div>
+<section id="services" class="content">
+    <div class="cards-grid">
+        {% for service in services %}
+            <article class="panel">
+                <h2>{{ service.title }}</h2>
+                <p class="muted">{{ service.description }}</p>
+            </article>
+        {% endfor %}
+    </div>
+</section>
+{% endblock %}

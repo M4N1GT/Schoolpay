@@ -1,0 +1,6 @@
+Comptes Démo
+Mot de passe commun : password123
+admin@schoolpay.test
+comptable@schoolpay.test
+directeur@schoolpay.test
+parent@schoolpay.test

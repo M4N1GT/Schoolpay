@@ -1,0 +1,26 @@
+{% extends 'backoffice/layout.html.twig' %}
+
+{% block page_title %}Impayes{% endblock %}
+
+{% block content %}
+<section class="table-panel">
+    <table>
+        <thead><tr><th>Eleve</th><th>Classe</th><th>Parent</th><th>Telephone</th><th>Reste</th><th>Action</th></tr></thead>
+        <tbody>
+        {% for row in rows %}
+            {% set parent = row.student.parents|first %}
+            <tr>
+                <td>{{ row.student.fullName }}</td>
+                <td>{{ row.student.schoolClass }}</td>
+                <td>{{ parent ? parent.fullName : 'N/A' }}</td>
+                <td>{{ parent ? parent.phone : 'N/A' }}</td>
+                <td>{{ row.situation.remainingTotal|number_format(0, ',', ' ') }} Ar</td>
+                <td><a class="button" href="{{ path('backoffice_payment_student', {id: row.student.id}) }}">Encaisser</a></td>
+            </tr>
+        {% else %}
+            <tr><td colspan="6">Aucun impaye detecte.</td></tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</section>
+{% endblock %}

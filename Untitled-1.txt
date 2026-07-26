@@ -1,0 +1,1 @@
+cd d:\SYMFONY\mon_projet && php -S localhost:8000 -t public

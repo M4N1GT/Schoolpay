@@ -1,0 +1,37 @@
+{% extends 'frontoffice/layout.html.twig' %}
+
+{% block title %}Espace parent | SchoolPay{% endblock %}
+
+{% block content %}
+<h1>Mes enfants</h1>
+{% if not parent %}
+    <section class="panel">
+        <p>Aucun profil parent n est associe a ce compte.</p>
+    </section>
+{% endif %}
+<div class="cards-grid">
+    {% for child in children %}
+        {% set situation = situations[child.id] %}
+        <article class="panel">
+            <h2>{{ child.fullName }}</h2>
+            <p class="muted">{{ child.registrationNumber }} | {{ child.schoolClass }}</p>
+            <p><strong>{{ situation.remainingTotal|number_format(0, ',', ' ') }} Ar</strong> restant a payer</p>
+            <a class="button" href="{{ path('parent_child_show', {id: child.id}) }}">Voir le detail</a>
+        </article>
+    {% else %}
+        <article class="panel">Aucun enfant associe.</article>
+    {% endfor %}
+</div>
+<section class="panel" style="margin-top: 18px;">
+    <h2>Notifications recentes</h2>
+    <table>
+        <tbody>
+        {% for notification in notifications %}
+            <tr><td>{{ notification.title }}</td><td>{{ notification.message }}</td><td>{{ notification.read ? 'Lue' : 'Nouvelle' }}</td></tr>
+        {% else %}
+            <tr><td>Aucune notification.</td></tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</section>
+{% endblock %}

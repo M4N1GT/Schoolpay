@@ -1,0 +1,51 @@
+{% extends 'backoffice/layout.html.twig' %}
+
+{% block page_title %}Paiement - {{ student.fullName }}{% endblock %}
+
+{% block content %}
+<div class="stats-row">
+    <div class="stat-card"><span class="stat-value">{{ situation.netTotal|number_format(0, ',', ' ') }} Ar</span><span class="stat-label">Net attendu</span></div>
+    <div class="stat-card"><span class="stat-value">{{ situation.paidTotal|number_format(0, ',', ' ') }} Ar</span><span class="stat-label">Deja paye</span></div>
+    <div class="stat-card"><span class="stat-value">{{ situation.remainingTotal|number_format(0, ',', ' ') }} Ar</span><span class="stat-label">Reste a payer</span></div>
+</div>
+<form method="post" class="panel grid-form" style="margin-top: 18px;">
+    <input type="hidden" name="_token" value="{{ csrf_token('payment_' ~ student.id) }}">
+    <div class="table-wrap">
+        <table>
+            <thead><tr><th></th><th>Frais</th><th>Echeance</th><th>Net</th><th>Paye</th><th>Reste</th><th>Statut</th></tr></thead>
+            <tbody>
+            {% for item in situation.items %}
+                <tr>
+                    <td><input type="checkbox" name="fees[]" value="{{ item.fee.id }}" {% if item.remaining <= 0 %}disabled{% endif %}></td>
+                    <td>{{ item.fee.feeType.name }}</td>
+                    <td>{{ item.fee.dueDate|date('d/m/Y') }}</td>
+                    <td>{{ item.net|number_format(0, ',', ' ') }} Ar</td>
+                    <td>{{ item.paid|number_format(0, ',', ' ') }} Ar</td>
+                    <td>{{ item.remaining|number_format(0, ',', ' ') }} Ar</td>
+                    <td><span class="badge {{ item.status == 'paye' ? 'ok' : (item.status == 'en_retard' ? 'danger' : 'warn') }}">{{ item.status }}</span></td>
+                </tr>
+            {% else %}
+                <tr><td colspan="7">Aucun frais affecte.</td></tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    <div>
+        <label>Montant recu</label>
+        <input type="number" min="1" step="0.01" name="amount" required>
+    </div>
+    <div>
+        <label>Mode de paiement</label>
+        <select name="paymentMethod">{% for method in methods %}<option value="{{ method }}">{{ method }}</option>{% endfor %}</select>
+    </div>
+    <div>
+        <label>Reference externe</label>
+        <input name="externalReference">
+    </div>
+    <div>
+        <label>Observation</label>
+        <textarea name="notes"></textarea>
+    </div>
+    <button>Valider le paiement</button>
+</form>
+{% endblock %}

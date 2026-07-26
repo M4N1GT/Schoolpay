@@ -1,0 +1,20 @@
+{% extends 'backoffice/layout.html.twig' %}
+
+{% block title %}{{ title }} | SchoolPay{% endblock %}
+{% block page_title %}{{ title }}{% endblock %}
+
+{% block content %}
+<section class="panel">
+    <table>
+        <tbody>
+        {% for header in headers %}
+            <tr><th>{{ header }}</th><td>{{ row[loop.index0] }}</td></tr>
+        {% endfor %}
+        </tbody>
+    </table>
+    <div class="actions" style="margin-top: 16px;">
+        <a class="button" href="{{ path('backoffice_crud_edit', {resource: resource, id: item.id}) }}">Modifier</a>
+        <a class="button ghost" href="{{ path('backoffice_crud_index', {resource: resource}) }}">Retour</a>
+    </div>
+</section>
+{% endblock %}

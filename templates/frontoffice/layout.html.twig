@@ -1,0 +1,18 @@
+{% extends 'base.html.twig' %}
+
+{% block body %}
+<div class="front-shell">
+    <nav class="front-nav">
+        <a class="brand" href="{{ path('app_home') }}">SchoolPay</a>
+        <div class="actions">
+            <a href="{{ path('parent_dashboard') }}">Mes enfants</a>
+            <a href="{{ path('parent_notifications') }}">Notifications</a>
+            <a href="{{ path('parent_profile') }}">Profil</a>
+            <a class="button" href="{{ path('app_logout') }}">Deconnexion</a>
+        </div>
+    </nav>
+    <main class="front-content">
+        {% block content %}{% endblock %}
+    </main>
+</div>
+{% endblock %}

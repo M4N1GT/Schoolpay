@@ -1,0 +1,18 @@
+{% extends 'backoffice/layout.html.twig' %}
+
+{% block page_title %}Journal d audit{% endblock %}
+
+{% block content %}
+<section class="table-panel">
+    <table>
+        <thead><tr><th>Date</th><th>Utilisateur</th><th>Action</th><th>Entite</th><th>Description</th></tr></thead>
+        <tbody>
+        {% for audit in audits %}
+            <tr><td>{{ audit.createdAt|date('d/m/Y H:i') }}</td><td>{{ audit.user ? audit.user.email : 'Systeme' }}</td><td>{{ audit.action }}</td><td>{{ audit.entityType }}</td><td>{{ audit.description }}</td></tr>
+        {% else %}
+            <tr><td colspan="5">Aucune trace.</td></tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</section>
+{% endblock %}

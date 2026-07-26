@@ -1,0 +1,62 @@
+{% extends 'backoffice/layout.html.twig' %}
+
+{% block title %}{{ title }} | SchoolPay{% endblock %}
+{% block page_title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="actions">
+    <a class="button" href="{{ path('backoffice_crud_new', {resource: resource}) }}">Ajouter</a>
+    <a class="button ghost" href="{{ path('backoffice_crud_index', {resource: resource, export: 'csv'}) }}">Export CSV</a>
+</div>
+<form method="get" class="panel grid-form" style="margin: 16px 0;">
+    <div>
+        <label for="q">Recherche</label>
+        <input id="q" name="q" value="{{ query }}" placeholder="Nom, matricule, telephone...">
+    </div>
+    <button>Filtrer</button>
+</form>
+<section class="table-panel">
+    <div class="table-wrap">
+        <table>
+            <thead>
+                <tr>
+                    {% for header in headers %}<th>{{ header }}</th>{% endfor %}
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for item in items %}
+                <tr>
+                    {% set row = [] %}
+                    {% if resource == 'students' %}
+                        {% set row = [item.registrationNumber, item.fullName, item.schoolClass, item.status] %}
+                    {% elseif resource == 'classes' %}
+                        {% set row = [item.name, item.level, item.schoolYear, item.active ? 'Active' : 'Inactive'] %}
+                    {% elseif resource == 'school-years' %}
+                        {% set row = [item.name, item.startDate|date('d/m/Y'), item.endDate|date('d/m/Y'), item.active ? 'Active' : (item.closed ? 'Cloturee' : 'Inactive')] %}
+                    {% elseif resource == 'parents' %}
+                        {% set row = [item.fullName, item.email, item.phone, item.students|length] %}
+                    {% elseif resource == 'fee-types' %}
+                        {% set row = [item.name, item.code, item.mandatory ? 'Oui' : 'Non', item.active ? 'Actif' : 'Inactif'] %}
+                    {% elseif resource == 'fee-assignments' %}
+                        {% set row = [item.feeType, item.student ? item.student.fullName : item.schoolClass, item.amount|number_format(0, ',', ' ') ~ ' Ar', item.dueDate|date('d/m/Y')] %}
+                    {% elseif resource == 'discounts' %}
+                        {% set row = [item.name, item.type, item.value, item.active ? 'Active' : 'Inactive'] %}
+                    {% elseif resource == 'users' %}
+                        {% set row = [item.fullName, item.email, item.roles|join(', '), item.active ? 'Actif' : 'Inactif'] %}
+                    {% endif %}
+                    {% for cell in row %}<td>{{ cell }}</td>{% endfor %}
+                    <td class="actions">
+                        <a class="button ghost" href="{{ path('backoffice_crud_show', {resource: resource, id: item.id}) }}">Voir</a>
+                        <a class="button" href="{{ path('backoffice_crud_edit', {resource: resource, id: item.id}) }}">Modifier</a>
+                        {% if resource == 'students' %}<a class="button secondary" href="{{ path('backoffice_payment_student', {id: item.id}) }}">Paiement</a>{% endif %}
+                    </td>
+                </tr>
+            {% else %}
+                <tr><td colspan="{{ headers|length + 1 }}">Aucune donnee disponible.</td></tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
+{% endblock %}

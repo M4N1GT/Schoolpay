@@ -1,0 +1,30 @@
+{% extends 'backoffice/layout.html.twig' %}
+
+{% block page_title %}Nouveau paiement{% endblock %}
+
+{% block content %}
+<form method="get" class="panel grid-form">
+    <div>
+        <label for="q">Rechercher un eleve</label>
+        <input id="q" name="q" value="{{ query }}" placeholder="Matricule, nom, prenom, telephone parent">
+    </div>
+    <button>Rechercher</button>
+</form>
+<section class="table-panel" style="margin-top: 16px;">
+    <table>
+        <thead><tr><th>Matricule</th><th>Nom</th><th>Classe</th><th>Action</th></tr></thead>
+        <tbody>
+        {% for student in students %}
+            <tr>
+                <td>{{ student.registrationNumber }}</td>
+                <td>{{ student.fullName }}</td>
+                <td>{{ student.schoolClass }}</td>
+                <td><a class="button" href="{{ path('backoffice_payment_student', {id: student.id}) }}">Ouvrir la caisse</a></td>
+            </tr>
+        {% else %}
+            <tr><td colspan="4">Lancez une recherche pour selectionner un eleve.</td></tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</section>
+{% endblock %}

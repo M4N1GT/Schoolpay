@@ -1,0 +1,25 @@
+{% extends 'backoffice/layout.html.twig' %}
+
+{% block page_title %}Recus{% endblock %}
+
+{% block content %}
+<section class="table-panel">
+    <table>
+        <thead><tr><th>Numero</th><th>Date</th><th>Eleve</th><th>Montant</th><th>Verification</th><th>Action</th></tr></thead>
+        <tbody>
+        {% for receipt in receipts %}
+            <tr>
+                <td>{{ receipt.receiptNumber }}</td>
+                <td>{{ receipt.generatedAt|date('d/m/Y H:i') }}</td>
+                <td>{{ receipt.payment.student.fullName }}</td>
+                <td>{{ receipt.payment.totalAmount|number_format(0, ',', ' ') }} Ar</td>
+                <td>{{ receipt.verificationCode }}</td>
+                <td><a class="button" href="{{ path('backoffice_receipt_print', {id: receipt.id}) }}">Imprimer</a></td>
+            </tr>
+        {% else %}
+            <tr><td colspan="6">Aucun recu.</td></tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</section>
+{% endblock %}
