@@ -1,0 +1,5 @@
+{# Remise a zero des filtres (section 24). Affiche seulement quand au moins un
+   filtre est actif, pour ne pas encombrer une liste vierge. #}
+{% if hasFilters|default(false) %}
+    <a class="button ghost" href="{{ path(app.request.attributes.get('_route'), app.request.attributes.get('_route_params')) }}">Reinitialiser</a>
+{% endif %}

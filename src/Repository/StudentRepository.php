@@ -36,6 +36,14 @@ class StudentRepository extends ServiceEntityRepository
             $qb->andWhere('c.id = :class')->setParameter('class', $filters['class']);
         }
 
+        if (!empty($filters['level'])) {
+            $qb->andWhere('c.level = :level')->setParameter('level', $filters['level']);
+        }
+
+        if (!empty($filters['gender'])) {
+            $qb->andWhere('s.gender = :gender')->setParameter('gender', $filters['gender']);
+        }
+
         return $qb;
     }
 }

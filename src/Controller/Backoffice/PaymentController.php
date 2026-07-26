@@ -8,6 +8,7 @@ use App\Entity\User;
 use App\Repository\PaymentRepository;
 use App\Repository\StudentRepository;
 use App\Security\Voter\BackofficeVoter;
+use App\Service\ListFilterService;
 use App\Service\PaginationService;
 use App\Service\PaymentCalculationService;
 use App\Service\PaymentService;
@@ -19,19 +20,36 @@ use Symfony\Component\Routing\Annotation\Route;
 #[Route('/backoffice/payments')]
 class PaymentController extends AbstractController
 {
+    /** Sert a la fois le formulaire de caisse et le filtre de la liste. */
+    public const PAYMENT_METHODS = [
+        'especes', 'MVola', 'Orange Money', 'Airtel Money',
+        'virement bancaire', 'carte bancaire', 'cheque', 'autre',
+    ];
+
     #[Route('', name: 'backoffice_payment_index')]
-    public function index(Request $request, PaymentRepository $payments, PaginationService $paginator): Response
+    public function index(Request $request, PaymentRepository $payments, PaginationService $paginator, ListFilterService $filters): Response
     {
-        $pagination = $paginator->paginate(
-            $payments->createQueryBuilder('p')
-                ->leftJoin('p.student', 's')->addSelect('s')
-                ->orderBy('p.paymentDate', 'DESC'),
-            $paginator->currentPage($request),
-        );
+        $queryBuilder = $payments->createQueryBuilder('p')
+            ->leftJoin('p.student', 's')->addSelect('s');
+
+        $filters->applySearch($queryBuilder, ['p.paymentNumber', 'p.externalReference', 's.registrationNumber', 's.firstName', 's.lastName'], $request->query->get('q'));
+        $filters->applyExact($queryBuilder, 'p.paymentMethod', $request->query->get('method'), 'method');
+        $filters->applyExact($queryBuilder, 'p.status', $request->query->get('status'), 'status');
+        $filters->applyDateRange($queryBuilder, 'p.paymentDate', $request->query->get('from'), $request->query->get('to'));
+        $filters->applySort($queryBuilder, [
+            'date' => 'p.paymentDate',
+            'montant' => 'p.totalAmount',
+            'eleve' => 's.lastName',
+        ], $request, 'p.paymentDate', 'DESC');
+
+        $pagination = $paginator->paginate($queryBuilder, $paginator->currentPage($request));
 
         return $this->render('backoffice/payment/index.html.twig', [
             'payments' => $pagination->items,
             'pagination' => $pagination,
+            'methods' => self::PAYMENT_METHODS,
+            'statuses' => [Payment::STATUS_VALIDATED, Payment::STATUS_PARTIAL, Payment::STATUS_CANCELLED],
+            'hasFilters' => $filters->hasActiveFilters($request),
         ]);
     }
 
@@ -93,7 +111,7 @@ class PaymentController extends AbstractController
         return $this->render('backoffice/payment/student.html.twig', [
             'student' => $student,
             'situation' => $situation,
-            'methods' => ['especes', 'MVola', 'Orange Money', 'Airtel Money', 'virement bancaire', 'carte bancaire', 'cheque', 'autre'],
+            'methods' => self::PAYMENT_METHODS,
         ]);
     }
 

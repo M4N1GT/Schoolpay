@@ -1,0 +1,13 @@
+{# En-tete de colonne cliquable. Le tri bascule entre asc et desc et conserve
+   les filtres courants ; on revient page 1 puisque le classement change.
+   Parametres : label, sortable (libelle => champ DQL) #}
+{% if sortable[label] is defined %}
+    {% set current = app.request.query.get('sort') %}
+    {% set direction = current == label and app.request.query.get('dir') != 'desc' ? 'desc' : 'asc' %}
+    {% set params = app.request.attributes.get('_route_params')|merge(app.request.query.all)|merge({sort: label, dir: direction, page: 1}) %}
+    <a href="{{ path(app.request.attributes.get('_route'), params) }}">
+        {{ label }}{% if current == label %} {{ app.request.query.get('dir') == 'desc' ? '↓' : '↑' }}{% endif %}
+    </a>
+{% else %}
+    {{ label }}
+{% endif %}

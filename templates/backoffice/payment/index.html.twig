@@ -6,10 +6,54 @@
 {% if is_granted('MANAGE', 'payments') %}
     <div class="actions"><a class="button" href="{{ path('backoffice_payment_new') }}">Nouveau paiement</a></div>
 {% endif %}
+<form method="get" class="panel grid-form" style="margin-top: 16px;">
+    <div>
+        <label for="q">Recherche</label>
+        <input id="q" name="q" value="{{ app.request.query.get('q') }}" placeholder="Numero, reference, eleve...">
+    </div>
+    <div>
+        <label for="method">Mode</label>
+        <select id="method" name="method">
+            <option value="">Tous</option>
+            {% for method in methods %}
+                <option value="{{ method }}" {{ app.request.query.get('method') == method ? 'selected' : '' }}>{{ method }}</option>
+            {% endfor %}
+        </select>
+    </div>
+    <div>
+        <label for="status">Statut</label>
+        <select id="status" name="status">
+            <option value="">Tous</option>
+            {% for status in statuses %}
+                <option value="{{ status }}" {{ app.request.query.get('status') == status ? 'selected' : '' }}>{{ status }}</option>
+            {% endfor %}
+        </select>
+    </div>
+    <div>
+        <label for="from">Du</label>
+        <input id="from" type="date" name="from" value="{{ app.request.query.get('from') }}">
+    </div>
+    <div>
+        <label for="to">Au</label>
+        <input id="to" type="date" name="to" value="{{ app.request.query.get('to') }}">
+    </div>
+    <div class="actions">
+        <button>Filtrer</button>
+        {{ include('_partials/filter_reset.html.twig') }}
+    </div>
+</form>
 <section class="table-panel" style="margin-top: 16px;">
     <div class="table-wrap">
         <table>
-            <thead><tr><th>Numero</th><th>Date</th><th>Eleve</th><th>Montant</th><th>Methode</th><th>Statut</th><th>Recu</th><th>Annulation</th></tr></thead>
+            <thead>
+                <tr>
+                    <th>Numero</th>
+                    <th>{{ include('_partials/sortable_header.html.twig', {label: 'date', sortable: {'date': 'p.paymentDate'}}) }}</th>
+                    <th>{{ include('_partials/sortable_header.html.twig', {label: 'eleve', sortable: {'eleve': 's.lastName'}}) }}</th>
+                    <th>{{ include('_partials/sortable_header.html.twig', {label: 'montant', sortable: {'montant': 'p.totalAmount'}}) }}</th>
+                    <th>Methode</th><th>Statut</th><th>Recu</th><th>Annulation</th>
+                </tr>
+            </thead>
             <tbody>
             {% for payment in payments %}
                 <tr>

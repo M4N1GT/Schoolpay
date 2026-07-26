@@ -18,14 +18,29 @@
         <label for="q">Recherche</label>
         <input id="q" name="q" value="{{ query }}" placeholder="Nom, matricule, telephone...">
     </div>
-    <button>Filtrer</button>
+    {% if resource == 'students' %}
+        <div>
+            <label for="status">Statut</label>
+            <input id="status" name="status" value="{{ app.request.query.get('status') }}" placeholder="actif, radie...">
+        </div>
+        <div>
+            <label for="gender">Sexe</label>
+            <input id="gender" name="gender" value="{{ app.request.query.get('gender') }}" placeholder="F, M...">
+        </div>
+    {% endif %}
+    <div class="actions">
+        <button>Filtrer</button>
+        {{ include('_partials/filter_reset.html.twig') }}
+    </div>
 </form>
 <section class="table-panel">
     <div class="table-wrap">
         <table>
             <thead>
                 <tr>
-                    {% for header in headers %}<th>{{ header }}</th>{% endfor %}
+                    {% for header in headers %}
+                        <th>{{ include('_partials/sortable_header.html.twig', {label: header}) }}</th>
+                    {% endfor %}
                     <th>Actions</th>
                 </tr>
             </thead>

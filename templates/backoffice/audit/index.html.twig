@@ -3,17 +3,79 @@
 {% block page_title %}Journal d audit{% endblock %}
 
 {% block content %}
-<section class="table-panel">
-    <table>
-        <thead><tr><th>Date</th><th>Utilisateur</th><th>Action</th><th>Entite</th><th>Description</th></tr></thead>
-        <tbody>
-        {% for audit in audits %}
-            <tr><td>{{ audit.createdAt|date('d/m/Y H:i') }}</td><td>{{ audit.user ? audit.user.email : 'Systeme' }}</td><td>{{ audit.action }}</td><td>{{ audit.entityType }}</td><td>{{ audit.description }}</td></tr>
-        {% else %}
-            <tr><td colspan="5">Aucune trace.</td></tr>
-        {% endfor %}
-        </tbody>
-    </table>
+<form method="get" class="panel grid-form">
+    <div>
+        <label for="q">Recherche</label>
+        <input id="q" name="q" value="{{ app.request.query.get('q') }}" placeholder="Description, entite...">
+    </div>
+    <div>
+        <label for="action">Action</label>
+        <select id="action" name="action">
+            <option value="">Toutes</option>
+            {% for action in actions %}
+                <option value="{{ action }}" {{ app.request.query.get('action') == action ? 'selected' : '' }}>{{ action }}</option>
+            {% endfor %}
+        </select>
+    </div>
+    <div>
+        <label for="entity">Entite</label>
+        <select id="entity" name="entity">
+            <option value="">Toutes</option>
+            {% for entity in entities %}
+                <option value="{{ entity }}" {{ app.request.query.get('entity') == entity ? 'selected' : '' }}>{{ entity|split('\\')|last }}</option>
+            {% endfor %}
+        </select>
+    </div>
+    <div>
+        <label for="user">Utilisateur</label>
+        <select id="user" name="user">
+            <option value="">Tous</option>
+            {% for user in users %}
+                <option value="{{ user.id }}" {{ app.request.query.get('user') == user.id ? 'selected' : '' }}>{{ user.fullName }}</option>
+            {% endfor %}
+        </select>
+    </div>
+    <div>
+        <label for="from">Du</label>
+        <input id="from" type="date" name="from" value="{{ app.request.query.get('from') }}">
+    </div>
+    <div>
+        <label for="to">Au</label>
+        <input id="to" type="date" name="to" value="{{ app.request.query.get('to') }}">
+    </div>
+    <div class="actions">
+        <button>Filtrer</button>
+        {{ include('_partials/filter_reset.html.twig') }}
+    </div>
+</form>
+
+<section class="table-panel" style="margin-top: 16px;">
+    <div class="table-wrap">
+        <table>
+            <thead>
+                <tr>
+                    <th>{{ include('_partials/sortable_header.html.twig', {label: 'date', sortable: {'date': 'a.createdAt'}}) }}</th>
+                    <th>Utilisateur</th>
+                    <th>{{ include('_partials/sortable_header.html.twig', {label: 'action', sortable: {'action': 'a.action'}}) }}</th>
+                    <th>{{ include('_partials/sortable_header.html.twig', {label: 'entite', sortable: {'entite': 'a.entityType'}}) }}</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for audit in audits %}
+                <tr>
+                    <td>{{ audit.createdAt|date('d/m/Y H:i') }}</td>
+                    <td>{{ audit.user ? audit.user.email : 'Systeme' }}</td>
+                    <td><span class="badge">{{ audit.action }}</span></td>
+                    <td>{{ audit.entityType|split('\\')|last }}</td>
+                    <td>{{ audit.description }}</td>
+                </tr>
+            {% else %}
+                <tr><td colspan="5">Aucune trace ne correspond a ces criteres.</td></tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
     {{ include('_partials/pagination.html.twig') }}
 </section>
 {% endblock %}

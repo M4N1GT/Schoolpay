@@ -3,38 +3,73 @@
 {% block page_title %}Impayes{% endblock %}
 
 {% block content %}
-<form method="get" class="panel grid-form" style="margin-bottom: 16px;">
+<form method="get" class="panel grid-form">
     <div>
         <label for="q">Recherche</label>
         <input id="q" name="q" value="{{ query }}" placeholder="Nom, matricule, telephone parent...">
     </div>
-    <button>Filtrer</button>
+    <div>
+        <label for="class">Classe</label>
+        <select id="class" name="class">
+            <option value="">Toutes</option>
+            {% for schoolClass in classes %}
+                <option value="{{ schoolClass.id }}" {{ app.request.query.get('class') == schoolClass.id ? 'selected' : '' }}>{{ schoolClass.name }}</option>
+            {% endfor %}
+        </select>
+    </div>
+    <div>
+        <label for="level">Niveau</label>
+        <select id="level" name="level">
+            <option value="">Tous</option>
+            {% for level in levels %}
+                <option value="{{ level }}" {{ app.request.query.get('level') == level ? 'selected' : '' }}>{{ level }}</option>
+            {% endfor %}
+        </select>
+    </div>
+    <div>
+        <label for="min">Montant minimum</label>
+        <input id="min" type="number" min="0" step="1000" name="min" value="{{ app.request.query.get('min') }}" placeholder="Ar">
+    </div>
+    <div class="actions">
+        <button>Filtrer</button>
+        {{ include('_partials/filter_reset.html.twig') }}
+    </div>
 </form>
-<section class="table-panel">
-    <table>
-        <thead><tr><th>Eleve</th><th>Classe</th><th>Parent</th><th>Telephone</th><th>Reste</th><th>Action</th></tr></thead>
-        <tbody>
-        {% for row in rows %}
-            {% set parent = row.student.parents|first %}
-            <tr>
-                <td>{{ row.student.fullName }}</td>
-                <td>{{ row.student.schoolClass }}</td>
-                <td>{{ parent ? parent.fullName : 'N/A' }}</td>
-                <td>{{ parent ? parent.phone : 'N/A' }}</td>
-                <td>{{ row.situation.remainingTotal|number_format(0, ',', ' ') }} Ar</td>
-                <td>
-                    {% if is_granted('MANAGE', 'payments') %}
-                        <a class="button" href="{{ path('backoffice_payment_student', {id: row.student.id}) }}">Encaisser</a>
-                    {% else %}
-                        <a class="button ghost" href="{{ path('backoffice_payment_student', {id: row.student.id}) }}">Consulter</a>
-                    {% endif %}
-                </td>
-            </tr>
-        {% else %}
-            <tr><td colspan="6">Aucun impaye sur cette page.</td></tr>
-        {% endfor %}
-        </tbody>
-    </table>
+
+<section class="table-panel" style="margin-top: 16px;">
+    <div class="table-wrap">
+        <table>
+            <thead><tr><th>Eleve</th><th>Classe</th><th>Parent</th><th>Telephone</th><th>Retard</th><th>Reste</th><th>Action</th></tr></thead>
+            <tbody>
+            {% for row in rows %}
+                {% set parent = row.student.parents|first %}
+                <tr>
+                    <td>{{ row.student.fullName }}</td>
+                    <td>{{ row.student.schoolClass }}</td>
+                    <td>{{ parent ? parent.fullName : 'N/A' }}</td>
+                    <td>{{ parent ? parent.phone : 'N/A' }}</td>
+                    <td>
+                        {% if row.overdueDays > 0 %}
+                            <span class="badge danger">{{ row.overdueDays }} j</span>
+                        {% else %}
+                            <span class="badge warn">A echoir</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ row.situation.remainingTotal|number_format(0, ',', ' ') }} Ar</td>
+                    <td>
+                        {% if is_granted('MANAGE', 'payments') %}
+                            <a class="button" href="{{ path('backoffice_payment_student', {id: row.student.id}) }}">Encaisser</a>
+                        {% else %}
+                            <a class="button ghost" href="{{ path('backoffice_payment_student', {id: row.student.id}) }}">Consulter</a>
+                        {% endif %}
+                    </td>
+                </tr>
+            {% else %}
+                <tr><td colspan="7">Aucun impaye sur cette page.</td></tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
     {{ include('_partials/pagination.html.twig') }}
     <p class="muted" style="margin-top: 8px;">
         {{ rows|length }} eleve{{ rows|length > 1 ? 's' : '' }} en impaye parmi les {{ pagination.items|length }} examine{{ pagination.items|length > 1 ? 's' : '' }} sur cette page.

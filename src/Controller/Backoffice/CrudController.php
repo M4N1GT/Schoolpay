@@ -21,6 +21,7 @@ use App\Form\UserType;
 use App\Security\Voter\BackofficeVoter;
 use App\Service\AuditLoggerService;
 use App\Service\CsvExportService;
+use App\Service\ListFilterService;
 use App\Service\PaginationService;
 use App\Service\SchoolYearService;
 use Doctrine\ORM\EntityManagerInterface;
@@ -34,15 +35,60 @@ use Symfony\Component\Routing\Annotation\Route;
 #[Route('/backoffice')]
 class CrudController extends AbstractController
 {
+    /**
+     * Chaque ressource declare ce sur quoi la recherche porte et les colonnes
+     * triables. Les expressions sont des chemins DQL complets : rien de ce qui
+     * vient de l'URL n'atteint la requete, seules ces valeurs sont utilisees.
+     */
     private const RESOURCES = [
-        'school-years' => ['class' => SchoolYear::class, 'form' => SchoolYearType::class, 'label' => 'Annees scolaires', 'headers' => ['Nom', 'Debut', 'Fin', 'Statut']],
-        'classes' => ['class' => SchoolClass::class, 'form' => SchoolClassType::class, 'label' => 'Classes', 'headers' => ['Nom', 'Niveau', 'Annee', 'Statut']],
-        'students' => ['class' => Student::class, 'form' => StudentType::class, 'label' => 'Eleves', 'headers' => ['Matricule', 'Nom', 'Classe', 'Statut']],
-        'parents' => ['class' => ParentGuardian::class, 'form' => ParentGuardianType::class, 'label' => 'Parents', 'headers' => ['Nom', 'Email', 'Telephone', 'Enfants']],
-        'fee-types' => ['class' => FeeType::class, 'form' => FeeTypeType::class, 'label' => 'Types de frais', 'headers' => ['Nom', 'Code', 'Obligatoire', 'Statut']],
-        'fee-assignments' => ['class' => FeeAssignment::class, 'form' => FeeAssignmentType::class, 'label' => 'Frais affectes', 'headers' => ['Frais', 'Cible', 'Montant', 'Echeance']],
-        'discounts' => ['class' => Discount::class, 'form' => DiscountType::class, 'label' => 'Reductions', 'headers' => ['Nom', 'Type', 'Valeur', 'Statut']],
-        'users' => ['class' => User::class, 'form' => UserType::class, 'label' => 'Utilisateurs', 'headers' => ['Nom', 'Email', 'Roles', 'Statut']],
+        'school-years' => [
+            'class' => SchoolYear::class, 'form' => SchoolYearType::class, 'label' => 'Annees scolaires',
+            'headers' => ['Nom', 'Debut', 'Fin', 'Statut'],
+            'search' => ['e.name'],
+            'sort' => ['Nom' => 'e.name', 'Debut' => 'e.startDate', 'Fin' => 'e.endDate'],
+        ],
+        'classes' => [
+            'class' => SchoolClass::class, 'form' => SchoolClassType::class, 'label' => 'Classes',
+            'headers' => ['Nom', 'Niveau', 'Annee', 'Statut'],
+            'search' => ['e.name', 'e.level'],
+            'sort' => ['Nom' => 'e.name', 'Niveau' => 'e.level'],
+        ],
+        'students' => [
+            'class' => Student::class, 'form' => StudentType::class, 'label' => 'Eleves',
+            'headers' => ['Matricule', 'Nom', 'Classe', 'Statut'],
+            'sort' => ['Matricule' => 's.registrationNumber', 'Nom' => 's.lastName', 'Statut' => 's.status'],
+        ],
+        'parents' => [
+            'class' => ParentGuardian::class, 'form' => ParentGuardianType::class, 'label' => 'Parents',
+            'headers' => ['Nom', 'Email', 'Telephone', 'Enfants'],
+            'search' => ['e.firstName', 'e.lastName', 'e.email', 'e.phone'],
+            'sort' => ['Nom' => 'e.lastName', 'Email' => 'e.email'],
+        ],
+        'fee-types' => [
+            'class' => FeeType::class, 'form' => FeeTypeType::class, 'label' => 'Types de frais',
+            'headers' => ['Nom', 'Code', 'Obligatoire', 'Statut'],
+            'search' => ['e.name', 'e.code'],
+            'sort' => ['Nom' => 'e.name', 'Code' => 'e.code'],
+        ],
+        'fee-assignments' => [
+            'class' => FeeAssignment::class, 'form' => FeeAssignmentType::class, 'label' => 'Frais affectes',
+            'headers' => ['Frais', 'Cible', 'Montant', 'Echeance'],
+            'joins' => ['e.feeType' => 'ft'],
+            'search' => ['ft.name', 'ft.code', 'e.description'],
+            'sort' => ['Frais' => 'ft.name', 'Montant' => 'e.amount', 'Echeance' => 'e.dueDate'],
+        ],
+        'discounts' => [
+            'class' => Discount::class, 'form' => DiscountType::class, 'label' => 'Reductions',
+            'headers' => ['Nom', 'Type', 'Valeur', 'Statut'],
+            'search' => ['e.name', 'e.reason'],
+            'sort' => ['Nom' => 'e.name', 'Type' => 'e.type', 'Valeur' => 'e.value'],
+        ],
+        'users' => [
+            'class' => User::class, 'form' => UserType::class, 'label' => 'Utilisateurs',
+            'headers' => ['Nom', 'Email', 'Roles', 'Statut'],
+            'search' => ['e.firstName', 'e.lastName', 'e.email'],
+            'sort' => ['Nom' => 'e.lastName', 'Email' => 'e.email'],
+        ],
     ];
 
     public function __construct(
@@ -53,14 +99,23 @@ class CrudController extends AbstractController
     }
 
     #[Route('/{resource}', name: 'backoffice_crud_index', requirements: ['resource' => 'school-years|classes|students|parents|fee-types|fee-assignments|discounts|users'])]
-    public function index(string $resource, Request $request, CsvExportService $csvExport, PaginationService $paginator): Response
+    public function index(string $resource, Request $request, CsvExportService $csvExport, PaginationService $paginator, ListFilterService $filters): Response
     {
         $config = $this->config($resource);
         $repository = $this->entityManager->getRepository($config['class']);
         $query = trim((string) $request->query->get('q', ''));
-        $queryBuilder = $resource === 'students'
-            ? $repository->searchQueryBuilder($query ?: null, $request->query->all())
-            : $repository->createQueryBuilder('e')->orderBy('e.id', 'DESC');
+
+        if ($resource === 'students') {
+            $queryBuilder = $repository->searchQueryBuilder($query ?: null, $request->query->all());
+            $filters->applySort($queryBuilder, $config['sort'], $request, 's.lastName');
+        } else {
+            $queryBuilder = $repository->createQueryBuilder('e');
+            foreach ($config['joins'] ?? [] as $path => $alias) {
+                $queryBuilder->leftJoin($path, $alias)->addSelect($alias);
+            }
+            $filters->applySearch($queryBuilder, $config['search'] ?? [], $query);
+            $filters->applySort($queryBuilder, $config['sort'] ?? [], $request, 'e.id', 'DESC');
+        }
 
         // L'export porte sur la selection complete, jamais sur la seule page
         // affichee : il doit rester exploitable comme extraction de reference.
@@ -85,6 +140,8 @@ class CrudController extends AbstractController
             'items' => $pagination->items,
             'pagination' => $pagination,
             'query' => $query,
+            'sortable' => $config['sort'] ?? [],
+            'hasFilters' => $filters->hasActiveFilters($request),
         ]);
     }
 
