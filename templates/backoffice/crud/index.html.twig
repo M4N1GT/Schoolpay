@@ -5,7 +5,9 @@
 
 {% block content %}
 <div class="actions">
-    <a class="button" href="{{ path('backoffice_crud_new', {resource: resource}) }}">Ajouter</a>
+    {% if is_granted('MANAGE', resource) %}
+        <a class="button" href="{{ path('backoffice_crud_new', {resource: resource}) }}">Ajouter</a>
+    {% endif %}
     <a class="button ghost" href="{{ path('backoffice_crud_index', {resource: resource, export: 'csv'}) }}">Export CSV</a>
 </div>
 <form method="get" class="panel grid-form" style="margin: 16px 0;">
@@ -48,8 +50,10 @@
                     {% for cell in row %}<td>{{ cell }}</td>{% endfor %}
                     <td class="actions">
                         <a class="button ghost" href="{{ path('backoffice_crud_show', {resource: resource, id: item.id}) }}">Voir</a>
-                        <a class="button" href="{{ path('backoffice_crud_edit', {resource: resource, id: item.id}) }}">Modifier</a>
-                        {% if resource == 'students' %}<a class="button secondary" href="{{ path('backoffice_payment_student', {id: item.id}) }}">Paiement</a>{% endif %}
+                        {% if is_granted('MANAGE', resource) %}
+                            <a class="button" href="{{ path('backoffice_crud_edit', {resource: resource, id: item.id}) }}">Modifier</a>
+                        {% endif %}
+                        {% if resource == 'students' and is_granted('MANAGE', 'payments') %}<a class="button secondary" href="{{ path('backoffice_payment_student', {id: item.id}) }}">Paiement</a>{% endif %}
                     </td>
                 </tr>
             {% else %}

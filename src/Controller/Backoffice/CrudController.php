@@ -18,6 +18,7 @@ use App\Form\SchoolClassType;
 use App\Form\SchoolYearType;
 use App\Form\StudentType;
 use App\Form\UserType;
+use App\Security\Voter\BackofficeVoter;
 use App\Service\AuditLoggerService;
 use App\Service\CsvExportService;
 use App\Service\SchoolYearService;
@@ -81,6 +82,7 @@ class CrudController extends AbstractController
     #[Route('/{resource}/new', name: 'backoffice_crud_new', requirements: ['resource' => 'school-years|classes|students|parents|fee-types|fee-assignments|discounts|users'])]
     public function new(string $resource, Request $request): Response
     {
+        $this->denyAccessUnlessGranted(BackofficeVoter::MANAGE, $resource);
         $config = $this->config($resource);
         $class = $config['class'];
         $entity = new $class();
@@ -107,6 +109,7 @@ class CrudController extends AbstractController
     #[Route('/{resource}/{id}/edit', name: 'backoffice_crud_edit', requirements: ['resource' => 'school-years|classes|students|parents|fee-types|fee-assignments|discounts|users'])]
     public function edit(string $resource, int $id, Request $request, SchoolYearService $schoolYearService): Response
     {
+        $this->denyAccessUnlessGranted(BackofficeVoter::MANAGE, $resource);
         $config = $this->config($resource);
         $entity = $this->entityManager->getRepository($config['class'])->find($id);
         if (!$entity) {

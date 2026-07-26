@@ -7,6 +7,7 @@ use App\Entity\Payment;
 use App\Entity\User;
 use App\Repository\PaymentRepository;
 use App\Repository\StudentRepository;
+use App\Security\Voter\BackofficeVoter;
 use App\Service\PaymentCalculationService;
 use App\Service\PaymentService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -28,6 +29,7 @@ class PaymentController extends AbstractController
     #[Route('/new', name: 'backoffice_payment_new')]
     public function search(Request $request, StudentRepository $students): Response
     {
+        $this->denyAccessUnlessGranted(BackofficeVoter::MANAGE, BackofficeVoter::PAYMENTS);
         $query = trim((string) $request->query->get('q', ''));
 
         return $this->render('backoffice/payment/search.html.twig', [
@@ -46,7 +48,11 @@ class PaymentController extends AbstractController
 
         $situation = $calculator->getStudentSituation($student);
 
+        // La consultation de la situation reste ouverte au directeur ; seul
+        // l'encaissement est reserve a l'administrateur et au comptable.
         if ($request->isMethod('POST')) {
+            $this->denyAccessUnlessGranted(BackofficeVoter::MANAGE, BackofficeVoter::PAYMENTS);
+
             if (!$this->isCsrfTokenValid('payment_' . $student->getId(), (string) $request->request->get('_token'))) {
                 throw $this->createAccessDeniedException('Jeton CSRF invalide.');
             }
@@ -85,6 +91,7 @@ class PaymentController extends AbstractController
     #[Route('/{id}/cancel', name: 'backoffice_payment_cancel', methods: ['POST'])]
     public function cancel(int $id, Request $request, PaymentRepository $payments, PaymentService $paymentService): Response
     {
+        $this->denyAccessUnlessGranted(BackofficeVoter::MANAGE, BackofficeVoter::PAYMENTS);
         $payment = $payments->find($id);
         if (!$payment) {
             throw $this->createNotFoundException();

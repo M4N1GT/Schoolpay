@@ -13,7 +13,9 @@
         </tbody>
     </table>
     <div class="actions" style="margin-top: 16px;">
-        <a class="button" href="{{ path('backoffice_crud_edit', {resource: resource, id: item.id}) }}">Modifier</a>
+        {% if is_granted('MANAGE', resource) %}
+            <a class="button" href="{{ path('backoffice_crud_edit', {resource: resource, id: item.id}) }}">Modifier</a>
+        {% endif %}
         <a class="button ghost" href="{{ path('backoffice_crud_index', {resource: resource}) }}">Retour</a>
     </div>
 </section>

@@ -1,3 +1,4 @@
+
 # SchoolPay
 
 Application Symfony 6.1 de gestion des paiements scolaires : back-office administratif, caisse, recus, impayes, rapports et espace parent.

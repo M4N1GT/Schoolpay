@@ -1,0 +1,25 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Acces refuse | SchoolPay{% endblock %}
+
+{% block body %}
+<div class="front-shell">
+    <main class="front-content">
+        <section class="panel" style="text-align: center;">
+            <h1>Acces refuse</h1>
+            <p class="muted">Votre compte ne dispose pas des droits necessaires pour cette operation.</p>
+            <p class="muted">Si vous pensez qu il s agit d une erreur, contactez l administrateur de l ecole.</p>
+            <div class="actions" style="justify-content: center; margin-top: 18px;">
+                {% if is_granted('ROLE_PARENT') %}
+                    <a class="button" href="{{ path('parent_dashboard') }}">Retour a mon espace</a>
+                {% elseif app.user %}
+                    <a class="button" href="{{ path('backoffice_dashboard') }}">Retour au tableau de bord</a>
+                {% else %}
+                    <a class="button" href="{{ path('app_login') }}">Se connecter</a>
+                {% endif %}
+                <a class="button ghost" href="{{ path('app_home') }}">Accueil</a>
+            </div>
+        </section>
+    </main>
+</div>
+{% endblock %}

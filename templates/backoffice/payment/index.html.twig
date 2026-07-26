@@ -3,7 +3,9 @@
 {% block page_title %}Paiements{% endblock %}
 
 {% block content %}
-<div class="actions"><a class="button" href="{{ path('backoffice_payment_new') }}">Nouveau paiement</a></div>
+{% if is_granted('MANAGE', 'payments') %}
+    <div class="actions"><a class="button" href="{{ path('backoffice_payment_new') }}">Nouveau paiement</a></div>
+{% endif %}
 <section class="table-panel" style="margin-top: 16px;">
     <div class="table-wrap">
         <table>
@@ -20,11 +22,13 @@
                     <td>{% if payment.receipt %}<a class="button ghost" href="{{ path('backoffice_receipt_print', {id: payment.receipt.id}) }}">Imprimer</a>{% endif %}</td>
                     <td>
                         {% if payment.status != 'annule' %}
-                            <form method="post" action="{{ path('backoffice_payment_cancel', {id: payment.id}) }}" class="actions">
-                                <input type="hidden" name="_token" value="{{ csrf_token('cancel_payment_' ~ payment.id) }}">
-                                <input name="reason" placeholder="Motif" required>
-                                <button class="danger" data-confirm="Annuler ce paiement ?">Annuler</button>
-                            </form>
+                            {% if is_granted('MANAGE', 'payments') %}
+                                <form method="post" action="{{ path('backoffice_payment_cancel', {id: payment.id}) }}" class="actions">
+                                    <input type="hidden" name="_token" value="{{ csrf_token('cancel_payment_' ~ payment.id) }}">
+                                    <input name="reason" placeholder="Motif" required>
+                                    <button class="danger" data-confirm="Annuler ce paiement ?">Annuler</button>
+                                </form>
+                            {% endif %}
                         {% else %}
                             {{ payment.cancellationReason }}
                         {% endif %}
